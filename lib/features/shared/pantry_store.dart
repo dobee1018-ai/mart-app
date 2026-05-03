@@ -1,0 +1,53 @@
+import 'package:flutter/foundation.dart';
+
+class PantryStore extends ChangeNotifier {
+  PantryStore._();
+
+  static final PantryStore instance = PantryStore._();
+
+  static const availableIngredients = [
+    '소금',
+    '설탕',
+    '식용유',
+    '간장',
+    '고춧가루',
+    '참기름',
+    '양파',
+    '대파',
+    '계란',
+    '밥',
+    '감자',
+    '당근',
+    '카레가루',
+  ];
+
+  final Set<String> _selected = {'소금', '식용유', '고춧가루', '양파'};
+
+  Set<String> get selected => Set.unmodifiable(_selected);
+
+  bool contains(String ingredient) => _selected.contains(ingredient);
+
+  int matchCount(Iterable<String> ingredients) {
+    return ingredients.where(_selected.contains).length;
+  }
+
+  List<String> missingIngredients(Iterable<String> ingredients) {
+    return ingredients.where((item) => !_selected.contains(item)).toList();
+  }
+
+  void toggle(String ingredient) {
+    if (_selected.contains(ingredient)) {
+      _selected.remove(ingredient);
+    } else {
+      _selected.add(ingredient);
+    }
+    notifyListeners();
+  }
+
+  void add(String ingredient) {
+    final value = ingredient.trim();
+    if (value.isEmpty) return;
+    _selected.add(value);
+    notifyListeners();
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.app",
+  "appName": "mart-app",
+  "webDir": "mart_app_web",
+  "bundledWebRuntime": false
+}
