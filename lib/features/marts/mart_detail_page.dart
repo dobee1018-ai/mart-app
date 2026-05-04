@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../product/product_detail_page.dart';
+import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
 
 class MartDetailPage extends StatelessWidget {
@@ -389,6 +390,7 @@ class _MartInfoSheet extends StatelessWidget {
             icon: Icons.phone_outlined,
             label: '전화번호',
             value: _cleanInfo(flyer.phoneNumber),
+            onTap: () => launchPhoneDialer(context, flyer.phoneNumber),
           ),
           _InfoRow(
             icon: Icons.local_parking,
@@ -400,7 +402,11 @@ class _MartInfoSheet extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => showMapLauncherSheet(
+                    context,
+                    martName: flyer.martName,
+                    address: flyer.address,
+                  ),
                   icon: const Icon(Icons.map_outlined),
                   label: const Text('길찾기'),
                 ),
@@ -408,7 +414,8 @@ class _MartInfoSheet extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () =>
+                      launchPhoneDialer(context, flyer.phoneNumber),
                   icon: const Icon(Icons.phone_outlined),
                   label: const Text('전화하기'),
                 ),
@@ -455,38 +462,49 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 21),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 68,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textGray,
-                fontWeight: FontWeight.w800,
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 21),
+            const SizedBox(width: 10),
+            SizedBox(
+              width: 68,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.textGray,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w800),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: onTap == null
+                      ? AppColors.textDark
+                      : AppColors.primaryGreen,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

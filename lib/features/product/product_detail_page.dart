@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../marts/mart_detail_page.dart';
+import '../memo/memo_page.dart';
+import '../my/my_page.dart';
+import '../shared/app_snack_bar.dart';
+import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
+import '../shared/shopping_list_store.dart';
 
 class ProductDetailPage extends StatelessWidget {
   const ProductDetailPage({super.key, required this.item});
@@ -309,7 +315,8 @@ class _MartPriceCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () =>
+                        _openComparisonMap(context, comparison.martName),
                     icon: const Icon(Icons.map_outlined),
                     label: const Text('길찾기'),
                   ),
@@ -317,7 +324,7 @@ class _MartPriceCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _addComparisonToCart(context, comparison),
                     icon: const Icon(Icons.add_shopping_cart),
                     label: const Text('담기'),
                   ),
@@ -385,7 +392,7 @@ class _BottomActionBar extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () {},
+                onPressed: () => _addMemoFromDeal(context, item),
                 icon: const Icon(Icons.edit_note),
                 label: const Text('메모'),
               ),
@@ -394,7 +401,7 @@ class _BottomActionBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: FilledButton(
-                onPressed: () {},
+                onPressed: () => _openMartDeals(context, item.martName),
                 child: Text('${item.martName} 특가 보기'),
               ),
             ),
@@ -403,6 +410,68 @@ class _BottomActionBar extends StatelessWidget {
       ),
     );
   }
+}
+
+void _addComparisonToCart(
+  BuildContext context,
+  MartPriceComparison comparison,
+) {
+  ShoppingListStore.instance.addComparisonToCart(comparison);
+  showTimedSnackBar(
+    context,
+    message: '${comparison.productName}을 장바구니에 담았습니다.',
+    actionLabel: '보기',
+    onAction: () => _openCartDetail(context),
+  );
+}
+
+void _addMemoFromDeal(BuildContext context, DealItem item) {
+  ShoppingListStore.instance.addMemo(item.title);
+  showTimedSnackBar(
+    context,
+    message: '${item.title}을 장보기 메모에 추가했습니다.',
+    actionLabel: '보기',
+    onAction: () => _openMemoPage(context),
+  );
+}
+
+void _openMartDeals(BuildContext context, String martName) {
+  final flyer = findFlyerByMartName(martName);
+  if (flyer == null) {
+    _showReadySnack(context, '$martName 정보는 준비 중입니다.');
+    return;
+  }
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(builder: (context) => MartDetailPage(flyer: flyer)),
+  );
+}
+
+void _openComparisonMap(BuildContext context, String martName) {
+  final flyer = findFlyerByMartName(martName);
+  showMapLauncherSheet(context, martName: martName, address: flyer?.address);
+}
+
+void _showReadySnack(BuildContext context, String message) {
+  showTimedSnackBar(context, message: message);
+}
+
+void _openCartDetail(BuildContext context) {
+  final store = ShoppingListStore.instance;
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => CartDetailPage(
+        cartGroups: store.cartGroups,
+        onRemoveGroup: store.removeCartGroup,
+        onRemoveLine: store.removeCartLine,
+      ),
+    ),
+  );
+}
+
+void _openMemoPage(BuildContext context) {
+  Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (context) => const MemoPage()));
 }
 
 class _SectionTitle extends StatelessWidget {

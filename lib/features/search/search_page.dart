@@ -3,8 +3,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../my/my_page.dart';
 import '../product/product_detail_page.dart';
+import '../shared/app_snack_bar.dart';
 import '../shared/mock_catalog.dart';
+import '../shared/shopping_list_store.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key, required this.onReportTap});
@@ -31,35 +34,91 @@ class _SearchPageState extends State<SearchPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 96),
       children: [
-        const _LocationRow(),
+        _FreshHeader(totalDeals: dealItems.length),
         const SizedBox(height: 14),
         const _SearchBox(),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         _HeroDeal(item: heroItem),
         const SizedBox(height: 18),
         _CategoryChips(
           selected: _category,
           onSelected: (value) => setState(() => _category = value),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
+        _SectionTitle(count: filtered.length),
+        const SizedBox(height: 12),
         _ProductGrid(items: filtered),
       ],
     );
   }
 }
 
-class _LocationRow extends StatelessWidget {
-  const _LocationRow();
+class _FreshHeader extends StatelessWidget {
+  const _FreshHeader({required this.totalDeals});
+
+  final int totalDeals;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 6),
-        const Text(
-          '원주시',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 5),
+                  const Text(
+                    '원주시',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                '동네마트 특가를 신선하게 모아봤어요',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.softOrange,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: const Color(0xFFFFE3B8)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.local_fire_department,
+                color: AppColors.accentOrange,
+                size: 17,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$totalDeals개 특가',
+                style: const TextStyle(
+                  color: AppColors.accentOrange,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -98,16 +157,16 @@ class _HeroDeal extends StatelessWidget {
       borderRadius: BorderRadius.circular(18),
       onTap: () => _openDetail(context, item),
       child: Container(
-        height: 252,
+        height: 306,
         decoration: BoxDecoration(
-          color: AppColors.softGreen,
+          color: const Color(0xFFF0FAF4),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFD7F0E2)),
+          border: Border.all(color: const Color(0xFFCDEEDB)),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x12000000),
-              blurRadius: 18,
-              offset: Offset(0, 8),
+              color: Color(0x160F7A4B),
+              blurRadius: 22,
+              offset: Offset(0, 10),
             ),
           ],
         ),
@@ -116,34 +175,78 @@ class _HeroDeal extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                right: -18,
-                bottom: -14,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Container(width: 126, color: AppColors.softOrange),
+              ),
+              Positioned(
+                right: -22,
+                bottom: -18,
                 child: Container(
-                  width: 184,
-                  height: 184,
+                  width: 206,
+                  height: 206,
                   decoration: const BoxDecoration(
-                    color: AppColors.surface,
+                    color: Color(0xFFFFFFFF),
                     shape: BoxShape.circle,
                   ),
                 ),
               ),
               Positioned(
                 right: 14,
-                bottom: 18,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: Image.network(
-                    item.imageUrl,
-                    width: 136,
-                    height: 136,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const _ImageFallback(),
-                  ),
+                bottom: 20,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 152,
+                      height: 152,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x17000000),
+                            blurRadius: 16,
+                            offset: Offset(0, 7),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.network(
+                          item.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const _ImageFallback(),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      right: -2,
+                      top: -12,
+                      child: _DiscountBurst(rate: item.discountRate),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 16,
+                child: Row(
+                  children: [
+                    _MiniInfoChip(
+                      icon: Icons.verified_outlined,
+                      text: '마트 특가 제보',
+                    ),
+                    const SizedBox(width: 7),
+                    _MiniInfoChip(icon: Icons.schedule, text: '오늘 장보기 추천'),
+                  ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 154, 18),
+                padding: const EdgeInsets.fromLTRB(18, 18, 160, 52),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -155,12 +258,12 @@ class _HeroDeal extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.textDark,
-                        fontSize: 23,
+                        fontSize: 24,
                         fontWeight: FontWeight.w900,
-                        height: 1.12,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 8),
                     Text(
                       item.martName,
                       maxLines: 1,
@@ -172,41 +275,27 @@ class _HeroDeal extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentOrange,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            '${item.discountRate}%',
-                            style: const TextStyle(
-                              color: AppColors.surface,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _won(item.price),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textDark,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      _won(item.price),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 27,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '정상가 ${_won(item.originalPrice)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        decoration: TextDecoration.lineThrough,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     FilledButton.icon(
@@ -226,6 +315,114 @@ class _HeroDeal extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MiniInfoChip extends StatelessWidget {
+  const _MiniInfoChip({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.86),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFE7F4EC)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: AppColors.primaryGreen),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.primaryGreen,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiscountBurst extends StatelessWidget {
+  const _DiscountBurst({required this.rate});
+
+  final int rate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        color: AppColors.accentOrange,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.surface, width: 3),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 12,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          '$rate%',
+          style: const TextStyle(
+            color: AppColors.surface,
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            '오늘의 특가 상품',
+            style: TextStyle(
+              color: AppColors.textDark,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        Text(
+          '$count개',
+          style: const TextStyle(
+            color: AppColors.primaryGreen,
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -343,17 +540,24 @@ class _ProductGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.66,
-      ),
-      itemBuilder: (context, index) => _ProductGridCard(item: items[index]),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - 12) / 2;
+        final cardHeight = _productImageHeight(cardWidth) + 104;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: cardWidth / cardHeight,
+          ),
+          itemBuilder: (context, index) => _ProductGridCard(item: items[index]),
+        );
+      },
     );
   }
 }
@@ -365,110 +569,175 @@ class _ProductGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _openDetail(context, item),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1.14,
-              child: Image.network(
-                item.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    const _ImageFallback(),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _Badge(text: item.badge, compact: true),
-                    const SizedBox(height: 7),
-                    Text(
-                      item.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
-                        height: 1.2,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Card(
+          elevation: 2,
+          shadowColor: const Color(0x12000000),
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xFFEAF0ED)),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _openDetail(context, item),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: _productImageHeight(constraints.maxWidth),
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const _ImageFallback(),
                       ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      item.martName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textGray,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                      Positioned(
+                        left: 8,
+                        top: 8,
+                        child: _Badge(text: item.badge, compact: true),
                       ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentOrange,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x22000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${item.discountRate}%',
+                            style: const TextStyle(
+                              color: AppColors.surface,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${item.discountRate}%',
+                          item.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppColors.accentOrange,
-                            fontSize: 13,
+                            color: AppColors.textDark,
                             fontWeight: FontWeight.w900,
+                            fontSize: 14,
+                            height: 1.2,
                           ),
                         ),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: Text(
-                            _won(item.price),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textDark,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                            ),
+                        const SizedBox(height: 5),
+                        Text(
+                          item.martName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: IconButton(
-                            tooltip: '담기',
-                            onPressed: () {},
-                            style: IconButton.styleFrom(
-                              backgroundColor: AppColors.softGreen,
-                              foregroundColor: AppColors.primaryGreen,
-                              padding: EdgeInsets.zero,
+                        const Spacer(),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _won(item.price),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
-                            icon: const Icon(Icons.add, size: 18),
-                          ),
+                            const SizedBox(width: 6),
+                            SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: IconButton(
+                                tooltip: '담기',
+                                onPressed: () => _addDealToCart(context, item),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: AppColors.softGreen,
+                                  foregroundColor: AppColors.primaryGreen,
+                                  padding: EdgeInsets.zero,
+                                ),
+                                icon: const Icon(Icons.add, size: 18),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
+
+double _productImageHeight(double cardWidth) =>
+    (cardWidth / 1.08).clamp(140.0, 170.0).toDouble();
 
 void _openDetail(BuildContext context, DealItem item) {
   Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (context) => ProductDetailPage(item: item),
+    ),
+  );
+}
+
+void _addDealToCart(BuildContext context, DealItem item) {
+  ShoppingListStore.instance.addDealToCart(item);
+  showTimedSnackBar(
+    context,
+    message: '${item.title}을 장바구니에 담았습니다.',
+    actionLabel: '보기',
+    onAction: () => _openCartDetail(context),
+  );
+}
+
+void _openCartDetail(BuildContext context) {
+  final store = ShoppingListStore.instance;
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => CartDetailPage(
+        cartGroups: store.cartGroups,
+        onRemoveGroup: store.removeCartGroup,
+        onRemoveLine: store.removeCartLine,
+      ),
     ),
   );
 }

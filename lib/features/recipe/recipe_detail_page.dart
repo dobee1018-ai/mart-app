@@ -43,6 +43,7 @@ class RecipeDetailPage extends StatelessWidget {
               children: [
                 _RecipeHero(recipe: recipe),
                 _RecipeSummary(recipe: recipe),
+                _RecipeAdjustSection(recipe: recipe),
                 const _SectionDivider(),
                 _IngredientSection(recipe: recipe),
                 const _SectionDivider(),
@@ -56,6 +57,276 @@ class RecipeDetailPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _RecipeAdjustSection extends StatefulWidget {
+  const _RecipeAdjustSection({required this.recipe});
+
+  final RecipeSuggestion recipe;
+
+  @override
+  State<_RecipeAdjustSection> createState() => _RecipeAdjustSectionState();
+}
+
+class _RecipeAdjustSectionState extends State<_RecipeAdjustSection> {
+  String _measureMode = 'spoon';
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: PantryStore.instance,
+      builder: (context, child) {
+        final store = PantryStore.instance;
+        final missing = store.missingIngredients(widget.recipe.ingredients);
+        final substitutes = missing
+            .take(3)
+            .map(
+              (ingredient) => _SubstituteSuggestion(
+                ingredient: ingredient,
+                substitute: _substituteFor(ingredient),
+              ),
+            )
+            .toList();
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE7EFEA)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        '내 재료에 맞게 조정',
+                        style: TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => showPantrySettingsSheet(context),
+                      icon: const Icon(Icons.tune, size: 17),
+                      label: const Text('재료'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  '부족한 재료는 대체안을 보고, 원하는 계량 기준으로 확인하세요.',
+                  style: TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 12,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _MeasureChoice(
+                      selected: _measureMode == 'spoon',
+                      label: '밥숟가락',
+                      onTap: () => setState(() => _measureMode = 'spoon'),
+                    ),
+                    _MeasureChoice(
+                      selected: _measureMode == 'measure',
+                      label: '계량스푼',
+                      onTap: () => setState(() => _measureMode = 'measure'),
+                    ),
+                    _MeasureChoice(
+                      selected: _measureMode == 'gram',
+                      label: 'g/ml',
+                      onTap: () => setState(() => _measureMode = 'gram'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _measureGuide(_measureMode),
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (missing.isEmpty)
+                  const _ReadyToCookNotice()
+                else ...[
+                  const Text(
+                    '대체 재료 제안',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...substitutes.map((item) => _SubstituteRow(item: item)),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MeasureChoice extends StatelessWidget {
+  const _MeasureChoice({
+    required this.selected,
+    required this.label,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      showCheckmark: false,
+      selectedColor: AppColors.softGreen,
+      labelStyle: TextStyle(
+        color: selected ? AppColors.primaryGreen : AppColors.textGray,
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+}
+
+class _ReadyToCookNotice extends StatelessWidget {
+  const _ReadyToCookNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.softGreen,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.check_circle, color: AppColors.primaryGreen, size: 19),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '보유 재료로 바로 조리 가능한 구성입니다.',
+              style: TextStyle(
+                color: AppColors.primaryGreen,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubstituteRow extends StatelessWidget {
+  const _SubstituteRow({required this.item});
+
+  final _SubstituteSuggestion item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 7),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              item.ingredient,
+              style: const TextStyle(
+                color: AppColors.textGray,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 7),
+            child: Icon(
+              Icons.arrow_forward,
+              size: 15,
+              color: AppColors.textGray,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              item.substitute,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textDark,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubstituteSuggestion {
+  const _SubstituteSuggestion({
+    required this.ingredient,
+    required this.substitute,
+  });
+
+  final String ingredient;
+  final String substitute;
+}
+
+String _measureGuide(String mode) {
+  return switch (mode) {
+    'measure' => '계량스푼 기준: 1큰술 15ml, 1작은술 5ml로 안내합니다.',
+    'gram' => 'g/ml 기준: 액체는 ml, 고형 재료는 g 단위로 바꿔 보여줄 수 있습니다.',
+    _ => '밥숟가락 기준: 간장/기름은 평평하게 1숟가락, 가루는 살짝 깎아서 잡아요.',
+  };
+}
+
+String _substituteFor(String ingredient) {
+  const substitutes = {
+    '양파': '대파 흰 부분 또는 양배추',
+    '대파': '쪽파 또는 양파 조금',
+    '계란': '두부 으깬 것 또는 닭가슴살',
+    '밥': '즉석밥 또는 냉동밥',
+    '감자': '고구마 또는 단호박',
+    '당근': '파프리카 또는 애호박',
+    '카레가루': '짜장가루 또는 고형카레',
+    '소금': '간장 소량',
+    '설탕': '올리고당 또는 매실청',
+    '식용유': '올리브유 또는 들기름',
+    '간장': '소금+물 소량',
+    '고춧가루': '고추장 소량',
+    '참기름': '들기름 또는 깨',
+  };
+  return substitutes[ingredient] ?? '비슷한 식감의 채소나 오늘 할인 재료';
 }
 
 class _RecipeHero extends StatelessWidget {

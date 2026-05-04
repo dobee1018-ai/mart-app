@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../shared/mock_catalog.dart';
+import '../shared/shopping_list_store.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -11,34 +12,12 @@ class MyPage extends StatefulWidget {
 }
 
 class _MyPageState extends State<MyPage> {
-  final List<CartGroup> _cartGroups = [
-    CartGroup(
-      martName: '행복한식자재마트 단구점',
-      items: [CartLine('계란 30구', 6900, 1), CartLine('맛있는 우유 900ml', 1980, 1)],
-    ),
-    CartGroup(
-      martName: '상지식자재할인마트',
-      items: [CartLine('양파 15kg/망', 12000, 1), CartLine('감자 3kg 박스', 6800, 1)],
-    ),
-  ];
-
   void _removeCartGroup(String martName) {
-    setState(() {
-      _cartGroups.removeWhere((group) => group.martName == martName);
-    });
+    ShoppingListStore.instance.removeCartGroup(martName);
   }
 
   void _removeCartLine(String martName, CartLine line) {
-    setState(() {
-      final group = _cartGroups
-          .where((group) => group.martName == martName)
-          .firstOrNull;
-      if (group == null) return;
-      group.items.remove(line);
-      if (group.items.isEmpty) {
-        _cartGroups.remove(group);
-      }
-    });
+    ShoppingListStore.instance.removeCartLine(martName, line);
   }
 
   @override
@@ -71,93 +50,99 @@ class _MyPageState extends State<MyPage> {
       ),
     ];
 
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        _ProfileCard(),
-        const SizedBox(height: 18),
-        _PointCard(
-          onExchangeTap: () => _push(context, const PointExchangePage()),
-        ),
-        const SizedBox(height: 18),
-        Row(
+    return AnimatedBuilder(
+      animation: ShoppingListStore.instance,
+      builder: (context, child) {
+        final cartGroups = ShoppingListStore.instance.cartGroups;
+        return ListView(
+          padding: const EdgeInsets.all(20),
           children: [
-            const Expanded(
-              child: Text(
-                '마트별 장바구니',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-              ),
+            _ProfileCard(),
+            const SizedBox(height: 18),
+            _PointCard(
+              onExchangeTap: () => _push(context, const PointExchangePage()),
             ),
-            TextButton(
-              onPressed: () {
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    '마트별 장바구니',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _push(
+                      context,
+                      CartDetailPage(
+                        cartGroups: cartGroups,
+                        onRemoveGroup: _removeCartGroup,
+                        onRemoveLine: _removeCartLine,
+                      ),
+                    );
+                  },
+                  child: const Text('전체보기'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _CartSummaryCard(
+              cartGroups: cartGroups,
+              onRemoveGroup: _removeCartGroup,
+              onOpen: () {
                 _push(
                   context,
                   CartDetailPage(
-                    cartGroups: _cartGroups,
+                    cartGroups: cartGroups,
                     onRemoveGroup: _removeCartGroup,
                     onRemoveLine: _removeCartLine,
                   ),
                 );
               },
-              child: const Text('전체보기'),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    '이달의 소비 기록',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _push(context, const ExpenseDetailPage()),
+                  child: const Text('월별/일별'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _push(context, const ExpenseDetailPage()),
+              child: _ReceiptSummaryCard(),
+            ),
+            const SizedBox(height: 18),
+            ...menus.map(
+              (menu) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: ListTile(
+                  leading: Icon(
+                    menu.icon,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: Text(menu.title),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _push(context, menu.page),
+                ),
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 10),
-        _CartSummaryCard(
-          cartGroups: _cartGroups,
-          onRemoveGroup: _removeCartGroup,
-          onOpen: () {
-            _push(
-              context,
-              CartDetailPage(
-                cartGroups: _cartGroups,
-                onRemoveGroup: _removeCartGroup,
-                onRemoveLine: _removeCartLine,
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                '이달의 소비 기록',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-              ),
-            ),
-            TextButton(
-              onPressed: () => _push(context, const ExpenseDetailPage()),
-              child: const Text('월별/일별'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _push(context, const ExpenseDetailPage()),
-          child: _ReceiptSummaryCard(),
-        ),
-        const SizedBox(height: 18),
-        ...menus.map(
-          (menu) => Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(13),
-            ),
-            child: ListTile(
-              leading: Icon(
-                menu.icon,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: Text(menu.title),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _push(context, menu.page),
-            ),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -170,24 +155,8 @@ class _MyMenu {
   final Widget page;
 }
 
-class CartGroup {
-  CartGroup({required this.martName, required this.items});
-
-  final String martName;
-  final List<CartLine> items;
-
-  int get total => items.fold(0, (sum, item) => sum + item.total);
-}
-
-class CartLine {
-  CartLine(this.name, this.price, this.quantity);
-
-  final String name;
-  final int price;
-  final int quantity;
-
-  int get total => price * quantity;
-}
+typedef CartGroup = ShoppingCartGroup;
+typedef CartLine = ShoppingCartLine;
 
 class _ProfileCard extends StatelessWidget {
   @override
@@ -459,52 +428,113 @@ class _CartDetailPageState extends State<CartDetailPage> {
           else
             ...cartGroups.map(
               (group) => Card(
+                color: AppColors.surface,
+                surfaceTintColor: AppColors.surface,
+                elevation: 2,
+                shadowColor: const Color(0x120F7A4B),
                 margin: const EdgeInsets.only(bottom: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Color(0xFFDDEFE5)),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.storefront,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              group.martName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 17,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.softGreen,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: const BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.storefront,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => _removeGroup(group.martName),
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            label: const Text('마트 삭제'),
-                          ),
-                        ],
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: Text(
+                                group.martName,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: () => _removeGroup(group.martName),
+                              icon: const Icon(Icons.delete_outline, size: 17),
+                              label: const Text('삭제'),
+                              style: TextButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                foregroundColor: AppColors.primaryGreen,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const Divider(),
+                      const SizedBox(height: 8),
                       ...group.items.map(
-                        (line) => ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(line.name),
-                          subtitle: Text(
-                            '${_won(line.price)} x ${line.quantity}',
+                        (line) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
                           ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          child: Row(
                             children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      line.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.textDark,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      '${_won(line.price)} x ${line.quantity}',
+                                      style: const TextStyle(
+                                        color: AppColors.textGray,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
                               Text(
                                 _won(line.total),
                                 style: const TextStyle(
+                                  color: AppColors.textDark,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -512,29 +542,38 @@ class _CartDetailPageState extends State<CartDetailPage> {
                                 tooltip: '상품 삭제',
                                 onPressed: () =>
                                     _removeLine(group.martName, line),
-                                icon: const Icon(Icons.close),
+                                icon: const Icon(Icons.close, size: 19),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      const Divider(),
-                      Row(
-                        children: [
-                          const Text(
-                            '마트별 합계',
-                            style: TextStyle(fontWeight: FontWeight.w900),
-                          ),
-                          const Spacer(),
-                          Text(
-                            _won(group.total),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 11,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceMuted,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text(
+                              '마트별 합계',
+                              style: TextStyle(fontWeight: FontWeight.w900),
                             ),
-                          ),
-                        ],
+                            const Spacer(),
+                            Text(
+                              _won(group.total),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

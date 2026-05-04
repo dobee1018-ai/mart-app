@@ -35,6 +35,11 @@ class RecipePage extends StatelessWidget {
               style: TextStyle(color: Color(0xFF6B7280)),
             ),
             const SizedBox(height: 16),
+            _PersonalRecipeCard(
+              selectedCount: store.selected.length,
+              matchedRecipeCount: fridgeRecipes.length,
+            ),
+            const SizedBox(height: 14),
             _BudgetCard(matchCount: store.selected.length),
             const SizedBox(height: 22),
             const _SectionTitle(
@@ -65,6 +70,159 @@ class RecipePage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _PersonalRecipeCard extends StatelessWidget {
+  const _PersonalRecipeCard({
+    required this.selectedCount,
+    required this.matchedRecipeCount,
+  });
+
+  final int selectedCount;
+  final int matchedRecipeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasIngredients = selectedCount > 0;
+    return Card(
+      elevation: 1,
+      shadowColor: const Color(0x10000000),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFDDEFE5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: AppColors.softGreen,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: AppColors.primaryGreen,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '내 재료 맞춤 추천',
+                        style: TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        '없는 재료는 대체 재료로 조정해드릴게요',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _StatusChip(
+                  icon: Icons.kitchen_outlined,
+                  text: hasIngredients ? '보유 재료 $selectedCount개' : '재료 설정 필요',
+                  color: AppColors.primaryGreen,
+                ),
+                _StatusChip(
+                  icon: Icons.restaurant_menu,
+                  text: '추천 가능 $matchedRecipeCount개',
+                  color: AppColors.accentOrange,
+                ),
+                const _StatusChip(
+                  icon: Icons.straighten,
+                  text: '계량 기준 변경',
+                  color: AppColors.textGray,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => showPantrySettingsSheet(context),
+                    icon: const Icon(Icons.tune, size: 18),
+                    label: const Text('재료 설정'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => showPantrySettingsSheet(context),
+                    icon: const Icon(Icons.search, size: 18),
+                    label: const Text('맞춤 추천'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
