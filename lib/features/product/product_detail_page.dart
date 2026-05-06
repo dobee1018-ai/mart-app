@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../models/app_enums.dart';
 import '../../theme/app_colors.dart';
 import '../marts/mart_detail_page.dart';
 import '../memo/memo_page.dart';
@@ -44,6 +45,8 @@ class ProductDetailPage extends StatelessWidget {
                 _ProductSummary(item: item),
                 const _SectionDivider(),
                 _DescriptionSection(description: item.description),
+                const _SectionDivider(),
+                _ProductReviewSection(item: item),
                 const _SectionDivider(),
                 _PriceComparisonSection(item: item),
               ],
@@ -174,6 +177,70 @@ class _DescriptionSection extends StatelessWidget {
               color: Color(0xFF4B5563),
               fontSize: 15,
               height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductReviewSection extends StatelessWidget {
+  const _ProductReviewSection({required this.item});
+
+  final DealItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(child: _SectionTitle('상품 리뷰')),
+              TextButton.icon(
+                onPressed: () => _openProductReview(context, item),
+                icon: const Icon(Icons.rate_review_outlined, size: 18),
+                label: const Text('작성'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.frame),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: AppColors.softOrange,
+                    foregroundColor: AppColors.accentOrange,
+                    child: Icon(Icons.inventory_2_outlined),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      '이 상품의 신선도와 가격 만족도를 남겨주세요. 상품 리뷰는 상품 상세에서만 작성됩니다.',
+                      style: TextStyle(
+                        color: Color(0xFF4B5563),
+                        height: 1.42,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonal(
+                    onPressed: () => _openProductReview(context, item),
+                    child: const Text('쓰기'),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -443,6 +510,17 @@ void _openMartDeals(BuildContext context, String martName) {
   }
   Navigator.of(context).push(
     MaterialPageRoute<void>(builder: (context) => MartDetailPage(flyer: flyer)),
+  );
+}
+
+void _openProductReview(BuildContext context, DealItem item) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => ReviewDetailPage(
+        initialTarget: item.title,
+        targetType: ReviewTargetType.product,
+      ),
+    ),
   );
 }
 

@@ -6,6 +6,7 @@ class FirestoreCollections {
   static const products = 'products';
   static const priceItems = 'price_items';
   static const reports = 'reports';
+  static const reviews = 'reviews';
   static const points = 'points';
   static const shoppingMemos = 'shopping_memos';
   static const receipts = 'receipts';

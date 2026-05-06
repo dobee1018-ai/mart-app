@@ -62,21 +62,28 @@ class MartApp extends StatelessWidget {
         ),
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.surface,
-          indicatorColor: AppColors.softGreen,
+          surfaceTintColor: AppColors.surface,
+          indicatorColor: const Color(0xFFDDF7E8),
+          height: 70,
           labelTextStyle: WidgetStateProperty.resolveWith(
             (states) => TextStyle(
               color: states.contains(WidgetState.selected)
                   ? AppColors.primaryGreen
-                  : AppColors.textGray,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+                  : const Color(0xFF7B8794),
+              fontSize: 11.8,
+              fontWeight: states.contains(WidgetState.selected)
+                  ? FontWeight.w900
+                  : FontWeight.w800,
+              height: 1.08,
+              letterSpacing: 0,
             ),
           ),
           iconTheme: WidgetStateProperty.resolveWith(
             (states) => IconThemeData(
               color: states.contains(WidgetState.selected)
                   ? AppColors.primaryGreen
-                  : AppColors.textGray,
+                  : const Color(0xFF7B8794),
+              size: states.contains(WidgetState.selected) ? 24 : 23,
             ),
           ),
         ),

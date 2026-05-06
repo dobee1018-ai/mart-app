@@ -8,8 +8,11 @@ class Report {
     required this.type,
     required this.approvalStatus,
     required this.createdAt,
+    this.reporterNickname,
     this.martId,
     this.martName,
+    this.title,
+    this.description,
     this.imageUrls = const [],
     this.inputItems = const [],
     this.ocrResult,
@@ -23,8 +26,11 @@ class Report {
   final ReportType type;
   final ApprovalStatus approvalStatus;
   final DateTime createdAt;
+  final String? reporterNickname;
   final String? martId;
   final String? martName;
+  final String? title;
+  final String? description;
   final List<String> imageUrls;
   final List<Map<String, dynamic>> inputItems;
   final Map<String, dynamic>? ocrResult;
@@ -41,8 +47,11 @@ class Report {
         data['approvalStatus'] as String? ?? 'pending',
       ),
       createdAt: dateTimeFromFirestore(data['createdAt']) ?? DateTime.now(),
+      reporterNickname: data['reporterNickname'] as String?,
       martId: data['martId'] as String?,
       martName: data['martName'] as String?,
+      title: data['title'] as String?,
+      description: data['description'] as String?,
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? const []),
       inputItems: List<Map<String, dynamic>>.from(
         data['inputItems'] as List? ?? const [],
@@ -60,8 +69,11 @@ class Report {
       'type': type.name,
       'approvalStatus': approvalStatus.name,
       'createdAt': dateTimeToFirestore(createdAt),
+      'reporterNickname': reporterNickname,
       'martId': martId,
       'martName': martName,
+      'title': title,
+      'description': description,
       'imageUrls': imageUrls,
       'inputItems': inputItems,
       'ocrResult': ocrResult,

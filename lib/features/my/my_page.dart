@@ -1,6 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/auth/auth_service.dart';
+import '../../data/repositories/review_repository.dart';
+import '../../data/repositories/user_repository.dart';
+import '../../models/app_enums.dart';
+import '../../models/mart_review.dart';
 import '../../theme/app_colors.dart';
+import '../review/review_moderation.dart';
 import '../shared/mock_catalog.dart';
 import '../shared/shopping_list_store.dart';
 
@@ -12,12 +19,55 @@ class MyPage extends StatefulWidget {
 }
 
 class _MyPageState extends State<MyPage> {
+  final _authService = AuthService();
+  final _userRepository = UserRepository();
+  bool _authBusy = false;
+
   void _removeCartGroup(String martName) {
     ShoppingListStore.instance.removeCartGroup(martName);
   }
 
   void _removeCartLine(String martName, CartLine line) {
     ShoppingListStore.instance.removeCartLine(martName, line);
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _authBusy = true);
+    try {
+      final credential = await _authService.signInWithGoogle();
+      final user = credential.user;
+      if (user != null) {
+        await _userRepository.saveSignedInUser(user);
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그인되었습니다.')));
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('로그인에 실패했습니다. $error')));
+    } finally {
+      if (mounted) {
+        setState(() => _authBusy = false);
+      }
+    }
+  }
+
+  Future<void> _signOut() async {
+    setState(() => _authBusy = true);
+    try {
+      await _authService.signOut();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그아웃되었습니다.')));
+    } finally {
+      if (mounted) {
+        setState(() => _authBusy = false);
+      }
+    }
   }
 
   @override
@@ -57,7 +107,18 @@ class _MyPageState extends State<MyPage> {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _ProfileCard(),
+            StreamBuilder<User?>(
+              stream: _authService.authStateChanges(),
+              initialData: _authService.currentUser,
+              builder: (context, snapshot) {
+                return _ProfileCard(
+                  user: snapshot.data,
+                  isBusy: _authBusy,
+                  onSignIn: _signInWithGoogle,
+                  onSignOut: _signOut,
+                );
+              },
+            ),
             const SizedBox(height: 18),
             _PointCard(
               onExchangeTap: () => _push(context, const PointExchangePage()),
@@ -159,8 +220,25 @@ typedef CartGroup = ShoppingCartGroup;
 typedef CartLine = ShoppingCartLine;
 
 class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
+    required this.user,
+    required this.isBusy,
+    required this.onSignIn,
+    required this.onSignOut,
+  });
+
+  final User? user;
+  final bool isBusy;
+  final VoidCallback onSignIn;
+  final VoidCallback onSignOut;
+
   @override
   Widget build(BuildContext context) {
+    final displayName = user?.displayName?.trim();
+    final email = user?.email?.trim();
+    final photoURL = user?.photoURL;
+    final signedIn = user != null;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
@@ -170,21 +248,45 @@ class _ProfileCard extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: Theme.of(context).colorScheme.primary,
-              child: const Icon(Icons.person, color: Colors.white, size: 30),
+              foregroundImage: photoURL == null ? null : NetworkImage(photoURL),
+              child: photoURL == null
+                  ? const Icon(Icons.person, color: Colors.white, size: 30)
+                  : null,
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '절약왕 김주부 님',
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                    signedIn
+                        ? '${displayName?.isNotEmpty == true ? displayName : '동네마트 회원'} 님'
+                        : '로그인이 필요합니다',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text('원주시 · 우수 특가 제보자 등급'),
+                  const SizedBox(height: 4),
+                  Text(
+                    signedIn
+                        ? '${email?.isNotEmpty == true ? email : 'Google 계정'} · 원주시'
+                        : '장보기 메모와 장바구니를 저장할 수 있어요.',
+                  ),
                 ],
               ),
+            ),
+            const SizedBox(width: 10),
+            FilledButton.tonalIcon(
+              onPressed: isBusy ? null : (signedIn ? onSignOut : onSignIn),
+              icon: isBusy
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(signedIn ? Icons.logout : Icons.login),
+              label: Text(signedIn ? '로그아웃' : '로그인'),
             ),
           ],
         ),
@@ -685,38 +787,150 @@ class _DailyExpenseView extends StatelessWidget {
 }
 
 class ReviewDetailPage extends StatefulWidget {
-  const ReviewDetailPage({super.key});
+  const ReviewDetailPage({
+    super.key,
+    this.initialTarget,
+    this.targetType = ReviewTargetType.mart,
+  });
+
+  final String? initialTarget;
+  final ReviewTargetType? targetType;
 
   @override
   State<ReviewDetailPage> createState() => _ReviewDetailPageState();
 }
 
 class _ReviewDetailPageState extends State<ReviewDetailPage> {
+  final _reviewController = TextEditingController();
+  final _reviewRepository = ReviewRepository();
+  late String _selectedTarget;
   int _rating = 4;
+  ReviewModerationResult? _moderationResult;
+  bool _isSubmitting = false;
+
+  ReviewTargetType get _targetType =>
+      widget.targetType ?? ReviewTargetType.mart;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTarget = widget.initialTarget ?? _targetOptions.first;
+  }
+
+  List<String> get _targetOptions {
+    if (_targetType == ReviewTargetType.product) {
+      return [_selectedTargetOrFallback];
+    }
+    final options = flyerItems.map((item) => item.martName).toSet().toList();
+    final initialTarget = widget.initialTarget;
+    if (initialTarget != null && !options.contains(initialTarget)) {
+      options.insert(0, initialTarget);
+    }
+    return options;
+  }
+
+  String get _selectedTargetOrFallback => widget.initialTarget ?? '상품을 선택해주세요';
+
+  @override
+  void dispose() {
+    _reviewController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitReview() async {
+    final result = ReviewModeration.check(_reviewController.text);
+    setState(() => _moderationResult = result);
+
+    if (!result.canSubmit) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('로그인 후 리뷰를 작성할 수 있어요.')));
+      return;
+    }
+
+    final statusText = switch (result.status) {
+      ReviewModerationStatus.scheduled => '24시간 검토 대기 후 공개 예정입니다.',
+      ReviewModerationStatus.needsReview => '관리자 확인 후 공개됩니다.',
+      ReviewModerationStatus.blocked => '',
+    };
+
+    setState(() => _isSubmitting = true);
+    try {
+      final now = DateTime.now();
+      final displayName = user.displayName?.trim();
+      await _reviewRepository.createReview(
+        MartReview(
+          id: '',
+          userId: user.uid,
+          userNickname: displayName?.isNotEmpty == true
+              ? displayName!
+              : '동네마트 회원',
+          targetType: _targetType,
+          targetName: _selectedTarget,
+          rating: _rating,
+          content: _reviewController.text.trim(),
+          status: result.status == ReviewModerationStatus.needsReview
+              ? ReviewStatus.needsReview
+              : ReviewStatus.scheduled,
+          createdAt: now,
+          publishAt: now.add(result.publishAfter),
+          moderationFlags: result.flags,
+        ),
+      );
+
+      if (!mounted) return;
+      _reviewController.clear();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('리뷰가 접수되었습니다. $statusText')));
+    } on Object catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('리뷰 접수에 실패했습니다. $error')));
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final targetType = _targetType;
+    final isProductReview = targetType == ReviewTargetType.product;
+    final options = _targetOptions;
     return _DetailScaffold(
-      title: '리뷰 작성',
+      title: targetType.label,
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          DropdownButtonFormField<String>(
-            initialValue: '행복한식자재마트 단구점',
-            decoration: const InputDecoration(labelText: '마트 또는 상품 선택'),
-            items: const [
-              DropdownMenuItem(
-                value: '행복한식자재마트 단구점',
-                child: Text('행복한식자재마트 단구점'),
-              ),
-              DropdownMenuItem(
-                value: '대륙식자재마트 원주본점',
-                child: Text('대륙식자재마트 원주본점'),
-              ),
-              DropdownMenuItem(value: '계란 30구', child: Text('계란 30구')),
-            ],
-            onChanged: (_) {},
-          ),
+          if (isProductReview)
+            _SelectedReviewTargetCard(
+              icon: Icons.inventory_2_outlined,
+              label: '상품 리뷰 대상',
+              targetName: _selectedTarget,
+            )
+          else
+            DropdownButtonFormField<String>(
+              initialValue: _selectedTarget,
+              decoration: const InputDecoration(labelText: '리뷰할 마트 선택'),
+              items: options
+                  .map(
+                    (martName) => DropdownMenuItem(
+                      value: martName,
+                      child: Text(martName),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _selectedTarget = value);
+              },
+            ),
           const SizedBox(height: 18),
           const Text('별점', style: TextStyle(fontWeight: FontWeight.w900)),
           const SizedBox(height: 8),
@@ -733,18 +947,178 @@ class _ReviewDetailPageState extends State<ReviewDetailPage> {
           const SizedBox(height: 12),
           _UploadBox(label: '사진 추가'),
           const SizedBox(height: 12),
-          const TextField(
+          _ReviewPolicyNotice(result: _moderationResult),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _reviewController,
             minLines: 5,
             maxLines: 7,
             decoration: InputDecoration(
               labelText: '리뷰 내용',
-              hintText: '신선도, 가격, 서비스 등 솔직한 리뷰를 남겨주세요.',
+              hintText: isProductReview
+                  ? '품질, 신선도, 가격 만족도 등 상품 후기를 남겨주세요.'
+                  : '신선도, 가격, 서비스 등 마트 이용 후기를 남겨주세요.',
               border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 18),
-          FilledButton(onPressed: () {}, child: const Text('등록하기')),
+          FilledButton.icon(
+            onPressed: _isSubmitting ? null : _submitReview,
+            icon: _isSubmitting
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.rate_review_outlined),
+            label: Text(_isSubmitting ? '접수 중' : '검토 요청하기'),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReviewPolicyNotice extends StatelessWidget {
+  const _ReviewPolicyNotice({required this.result});
+
+  final ReviewModerationResult? result;
+
+  @override
+  Widget build(BuildContext context) {
+    final blocked = result?.status == ReviewModerationStatus.blocked;
+    final needsReview = result?.status == ReviewModerationStatus.needsReview;
+    final color = blocked
+        ? AppColors.danger
+        : needsReview
+        ? AppColors.accentOrange
+        : AppColors.primaryGreen;
+    final background = blocked
+        ? const Color(0xFFFFEFEA)
+        : needsReview
+        ? AppColors.softOrange
+        : AppColors.softGreen;
+    final message = result?.message ?? '리뷰는 바로 공개되지 않고 24시간 검토 대기 후 공개됩니다.';
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(13),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  blocked ? Icons.block : Icons.verified_user_outlined,
+                  color: color,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: TextStyle(color: color, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ],
+            ),
+            if (result?.flags.isNotEmpty == true) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: result!.flags.map((flag) {
+                  return DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: color.withValues(alpha: 0.22)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        flag,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedReviewTargetCard extends StatelessWidget {
+  const _SelectedReviewTargetCard({
+    required this.icon,
+    required this.label,
+    required this.targetName,
+  });
+
+  final IconData icon;
+  final String label;
+  final String targetName;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.frame),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: AppColors.softGreen,
+              foregroundColor: AppColors.primaryGreen,
+              child: Icon(icon),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.textGray,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    targetName,
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

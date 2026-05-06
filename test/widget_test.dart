@@ -13,10 +13,10 @@ void main() {
 
     expect(find.text('홈'), findsOneWidget);
     expect(find.text('동네마트'), findsOneWidget);
-    expect(find.text('소분모임'), findsOneWidget);
+    expect(find.text('소분모임'), findsNothing);
     expect(find.text('레시피'), findsOneWidget);
     expect(find.text('메모'), findsOneWidget);
-    expect(find.text('마이'), findsOneWidget);
+    expect(find.text('내 정보'), findsOneWidget);
 
     await tester.tap(find.text('동네마트'));
     await tester.pump();

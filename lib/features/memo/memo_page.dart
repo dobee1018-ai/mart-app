@@ -126,6 +126,27 @@ class _MemoPageState extends State<MemoPage> {
                           selected: true,
                           onSelected: (_) => store.toggle(item),
                           label: Text(item),
+                          avatar: const Icon(Icons.check, size: 16),
+                          showCheckmark: false,
+                          selectedColor: AppColors.primaryGreen,
+                          backgroundColor: AppColors.surface,
+                          side: const BorderSide(
+                            color: AppColors.primaryGreen,
+                            width: 1.2,
+                          ),
+                          labelStyle: const TextStyle(
+                            color: AppColors.surface,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          iconTheme: const IconThemeData(
+                            color: AppColors.surface,
+                          ),
+                          elevation: 1.5,
+                          pressElevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                         ),
                       )
                       .toList(),

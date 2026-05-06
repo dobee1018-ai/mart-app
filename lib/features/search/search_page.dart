@@ -297,17 +297,6 @@ class _HeroDeal extends StatelessWidget {
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    FilledButton.icon(
-                      onPressed: () => _openDetail(context, item),
-                      icon: const Icon(Icons.arrow_forward, size: 17),
-                      label: const Text('특가 보기'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(118, 36),
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -636,13 +625,13 @@ class _ProductGridCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                    padding: const EdgeInsets.all(8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           item.title,
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: AppColors.textDark,
@@ -651,7 +640,7 @@ class _ProductGridCard extends StatelessWidget {
                             height: 1.2,
                           ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 3),
                         Text(
                           item.martName,
                           maxLines: 1,
@@ -674,14 +663,14 @@ class _ProductGridCard extends StatelessWidget {
                                 style: const TextStyle(
                                   color: AppColors.textDark,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 16,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 5),
                             SizedBox(
-                              width: 30,
-                              height: 30,
+                              width: 28,
+                              height: 28,
                               child: IconButton(
                                 tooltip: '담기',
                                 onPressed: () => _addDealToCart(context, item),
@@ -690,7 +679,7 @@ class _ProductGridCard extends StatelessWidget {
                                   foregroundColor: AppColors.primaryGreen,
                                   padding: EdgeInsets.zero,
                                 ),
-                                icon: const Icon(Icons.add, size: 18),
+                                icon: const Icon(Icons.add, size: 17),
                               ),
                             ),
                           ],

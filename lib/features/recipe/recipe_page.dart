@@ -17,15 +17,10 @@ class RecipePage extends StatelessWidget {
       animation: PantryStore.instance,
       builder: (context, child) {
         final store = PantryStore.instance;
-        final fridgeRecipes =
-            recipeSuggestions
-                .where((recipe) => store.matchCount(recipe.ingredients) > 0)
-                .toList()
-              ..sort(
-                (a, b) => store
-                    .matchCount(b.ingredients)
-                    .compareTo(store.matchCount(a.ingredients)),
-              );
+        final recommendations = _rankRecipeRecommendations(store);
+        final matchedRecipeCount = recommendations
+            .where((entry) => entry.matchCount > 0)
+            .length;
 
         return ListView(
           padding: const EdgeInsets.all(20),
@@ -37,7 +32,7 @@ class RecipePage extends StatelessWidget {
             const SizedBox(height: 16),
             _PersonalRecipeCard(
               selectedCount: store.selected.length,
-              matchedRecipeCount: fridgeRecipes.length,
+              matchedRecipeCount: matchedRecipeCount,
             ),
             const SizedBox(height: 14),
             _BudgetCard(matchCount: store.selected.length),
@@ -47,7 +42,7 @@ class RecipePage extends StatelessWidget {
               text: '특가 상품 활용 레시피',
             ),
             const SizedBox(height: 12),
-            const _RecipeCarousel(),
+            _RecipeCarousel(recommendations: recommendations.take(10).toList()),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -66,7 +61,12 @@ class RecipePage extends StatelessWidget {
             const SizedBox(height: 10),
             _PantryChips(store: store),
             const SizedBox(height: 18),
-            ...fridgeRecipes.map((recipe) => _FridgeRecipeTile(recipe: recipe)),
+            if (recommendations.isEmpty)
+              const _NoRecipeCard()
+            else
+              ...recommendations
+                  .take(8)
+                  .map((entry) => _FridgeRecipeTile(entry: entry)),
           ],
         );
       },
@@ -228,7 +228,9 @@ class _StatusChip extends StatelessWidget {
 }
 
 class _RecipeCarousel extends StatefulWidget {
-  const _RecipeCarousel();
+  const _RecipeCarousel({required this.recommendations});
+
+  final List<_RecipeRecommendation> recommendations;
 
   @override
   State<_RecipeCarousel> createState() => _RecipeCarouselState();
@@ -252,10 +254,10 @@ class _RecipeCarouselState extends State<_RecipeCarousel> {
         child: ListView.separated(
           controller: _scrollController,
           scrollDirection: Axis.horizontal,
-          itemCount: recipeSuggestions.length,
+          itemCount: widget.recommendations.length,
           separatorBuilder: (context, index) => const SizedBox(width: 12),
           itemBuilder: (context, index) {
-            return _RecipeCard(recipe: recipeSuggestions[index]);
+            return _RecipeCard(entry: widget.recommendations[index]);
           },
         ),
       ),
@@ -324,14 +326,13 @@ class _BudgetCard extends StatelessWidget {
 }
 
 class _RecipeCard extends StatelessWidget {
-  const _RecipeCard({required this.recipe});
+  const _RecipeCard({required this.entry});
 
-  final RecipeSuggestion recipe;
+  final _RecipeRecommendation entry;
 
   @override
   Widget build(BuildContext context) {
-    final store = PantryStore.instance;
-    final match = store.matchCount(recipe.ingredients);
+    final recipe = entry.recipe;
     return SizedBox(
       width: 190,
       child: Card(
@@ -368,7 +369,7 @@ class _RecipeCard extends StatelessWidget {
                             vertical: 4,
                           ),
                           child: Text(
-                            recipe.tag,
+                            entry.badgeText,
                             style: const TextStyle(
                               color: AppColors.primaryGreen,
                               fontSize: 12,
@@ -413,7 +414,7 @@ class _RecipeCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '보유 재료 $match/${recipe.ingredients.length}개 매칭',
+                      entry.summaryText,
                       style: const TextStyle(
                         color: Color(0xFF6B7280),
                         fontSize: 12,
@@ -448,6 +449,19 @@ class _PantryChips extends StatelessWidget {
               label: Text(ingredient),
               selected: true,
               onSelected: (_) => store.toggle(ingredient),
+              avatar: const Icon(Icons.check, size: 16),
+              showCheckmark: false,
+              selectedColor: AppColors.primaryGreen,
+              backgroundColor: AppColors.surface,
+              side: const BorderSide(color: AppColors.primaryGreen, width: 1.2),
+              labelStyle: const TextStyle(
+                color: AppColors.surface,
+                fontWeight: FontWeight.w900,
+              ),
+              iconTheme: const IconThemeData(color: AppColors.surface),
+              elevation: 1.5,
+              pressElevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             ),
           )
           .toList(),
@@ -456,33 +470,223 @@ class _PantryChips extends StatelessWidget {
 }
 
 class _FridgeRecipeTile extends StatelessWidget {
-  const _FridgeRecipeTile({required this.recipe});
+  const _FridgeRecipeTile({required this.entry});
 
-  final RecipeSuggestion recipe;
+  final _RecipeRecommendation entry;
 
   @override
   Widget build(BuildContext context) {
-    final store = PantryStore.instance;
-    final match = store.matchCount(recipe.ingredients);
-    final owned = recipe.ingredients.where(store.contains).join(', ');
+    final recipe = entry.recipe;
+    final tone = entry.ingredientTone;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.rice_bowl_outlined)),
         title: Text(recipe.title),
-        subtitle: Text('보유 재료 매칭: $owned'),
-        trailing: Text(
-          '$match/${recipe.ingredients.length}',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w900,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(entry.summaryText),
+            if (entry.missingIngredients.isNotEmpty)
+              Text(
+                '부족: ${entry.missingIngredients.take(3).join(', ')}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textGray, fontSize: 12),
+              ),
+          ],
         ),
+        trailing: _IngredientStatusBadge(tone: tone),
         onTap: () => _openRecipeDetail(context, recipe),
       ),
     );
   }
+}
+
+class _IngredientStatusBadge extends StatelessWidget {
+  const _IngredientStatusBadge({required this.tone});
+
+  final _IngredientMatchTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: tone.background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: tone.border, width: 1.15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(tone.icon, size: 14, color: tone.foreground),
+            const SizedBox(width: 4),
+            Text(
+              tone.label,
+              style: TextStyle(
+                color: tone.foreground,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoRecipeCard extends StatelessWidget {
+  const _NoRecipeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: const Padding(
+        padding: EdgeInsets.all(18),
+        child: Text(
+          '재료를 추가하면 바로 만들 수 있는 메뉴부터 추천해드릴게요.',
+          style: TextStyle(
+            color: AppColors.textGray,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeRecommendation {
+  const _RecipeRecommendation({
+    required this.recipe,
+    required this.matchCount,
+    required this.missingIngredients,
+    required this.discountMatchCount,
+    required this.score,
+  });
+
+  final RecipeSuggestion recipe;
+  final int matchCount;
+  final List<String> missingIngredients;
+  final int discountMatchCount;
+  final int score;
+
+  bool get isReady => missingIngredients.isEmpty;
+
+  _IngredientMatchTone get ingredientTone {
+    final total = recipe.ingredients.length;
+    final missingCount = missingIngredients.length;
+    final matchRatio = total == 0 ? 0 : matchCount / total;
+
+    if (isReady || matchRatio >= 0.8) {
+      return const _IngredientMatchTone(
+        label: '바로 가능',
+        icon: Icons.check_circle,
+        background: AppColors.softGreen,
+        border: Color(0xFFBFE8D2),
+        foreground: AppColors.primaryGreen,
+      );
+    }
+
+    if (matchCount >= 2 || matchRatio >= 0.4) {
+      return _IngredientMatchTone(
+        label: '$missingCount개 필요',
+        icon: Icons.add_circle,
+        background: AppColors.softOrange,
+        border: const Color(0xFFFFD99B),
+        foreground: AppColors.accentOrange,
+      );
+    }
+
+    return const _IngredientMatchTone(
+      label: '재료 부족',
+      icon: Icons.error_outline,
+      background: Color(0xFFFFEFEA),
+      border: Color(0xFFFFC8B8),
+      foreground: Color(0xFFE0522D),
+    );
+  }
+
+  String get badgeText {
+    if (isReady) return '바로 가능';
+    if (missingIngredients.length == 1) return '1개만 추가';
+    if (discountMatchCount > 0) return '특가 활용';
+    return '$matchCount/${recipe.ingredients.length} 매칭';
+  }
+
+  String get summaryText {
+    final total = recipe.ingredients.length;
+    final discountText = discountMatchCount > 0
+        ? ' · 특가 재료 $discountMatchCount개'
+        : '';
+    return '보유 재료 $matchCount/$total개$discountText';
+  }
+}
+
+class _IngredientMatchTone {
+  const _IngredientMatchTone({
+    required this.label,
+    required this.icon,
+    required this.background,
+    required this.border,
+    required this.foreground,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color background;
+  final Color border;
+  final Color foreground;
+}
+
+List<_RecipeRecommendation> _rankRecipeRecommendations(PantryStore store) {
+  final selected = store.selected;
+  final dealIds = dealItems.map((deal) => deal.id).toSet();
+  final recommendations = recipeSuggestions.map((recipe) {
+    final matchCount = store.matchCount(recipe.ingredients);
+    final missing = recipe.ingredients
+        .where((ingredient) => !selected.contains(ingredient))
+        .toList();
+    final discountMatchCount = recipe.relatedDealIds
+        .where((dealId) => dealIds.contains(dealId))
+        .length;
+    final readyBonus = missing.isEmpty ? 12 : 0;
+    final almostReadyBonus = missing.length == 1 ? 6 : 0;
+    final budgetBonus = recipe.budget <= 7000 ? 3 : 0;
+    final selectedPenalty = selected.isEmpty ? 0 : missing.length * 2;
+    final score =
+        (matchCount * 8) +
+        (discountMatchCount * 3) +
+        readyBonus +
+        almostReadyBonus +
+        budgetBonus -
+        selectedPenalty;
+
+    return _RecipeRecommendation(
+      recipe: recipe,
+      matchCount: matchCount,
+      missingIngredients: missing,
+      discountMatchCount: discountMatchCount,
+      score: score,
+    );
+  }).toList();
+
+  recommendations.sort((a, b) {
+    final scoreCompare = b.score.compareTo(a.score);
+    if (scoreCompare != 0) return scoreCompare;
+    final matchCompare = b.matchCount.compareTo(a.matchCount);
+    if (matchCompare != 0) return matchCompare;
+    final missingCompare = a.missingIngredients.length.compareTo(
+      b.missingIngredients.length,
+    );
+    if (missingCompare != 0) return missingCompare;
+    return a.recipe.budget.compareTo(b.recipe.budget);
+  });
+  return recommendations;
 }
 
 void _openRecipeDetail(BuildContext context, RecipeSuggestion recipe) {

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "123049771054",
+    "project_id": "wonju-mart-app-1018",
+    "storage_bucket": "wonju-mart-app-1018.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123049771054:android:3e69e408b8400664e8dfbf",
+        "android_client_info": {
+          "package_name": "com.example.mart_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123049771054-io085vick4k8e02vjn7ch4lsb8ifb95u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mart_app",
+            "certificate_hash": "1d70421d42eb4b1b5530e2b7b82c196755c60b67"
+          }
+        },
+        {
+          "client_id": "123049771054-p1hn8ecfg26srt6heaqh84lj7rgmlkhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqz3p6pZGQ5ZufZ1zhWhXDLVxk4vbMD8s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123049771054-p1hn8ecfg26srt6heaqh84lj7rgmlkhs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "123049771054-d65jj4087dilca42lkn24v8ssf946aqe.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.martApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -91,10 +91,42 @@ class _PantrySettingsSheetState extends State<_PantrySettingsSheet> {
                         ...PantryStore.availableIngredients,
                         ..._store.selected,
                       }.map((ingredient) {
+                        final selected = _store.contains(ingredient);
                         return FilterChip(
-                          selected: _store.contains(ingredient),
+                          selected: selected,
                           onSelected: (_) => _store.toggle(ingredient),
                           label: Text(ingredient),
+                          avatar: selected
+                              ? const Icon(Icons.check, size: 16)
+                              : null,
+                          showCheckmark: false,
+                          selectedColor: AppColors.primaryGreen,
+                          backgroundColor: AppColors.surface,
+                          side: BorderSide(
+                            color: selected
+                                ? AppColors.primaryGreen
+                                : const Color(0xFFD1D5DB),
+                            width: selected ? 1.2 : 1,
+                          ),
+                          labelStyle: TextStyle(
+                            color: selected
+                                ? AppColors.surface
+                                : AppColors.textDark,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          avatarBoxConstraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          iconTheme: const IconThemeData(
+                            color: AppColors.surface,
+                          ),
+                          elevation: selected ? 1.5 : 0,
+                          pressElevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                         );
                       }).toList(),
                 ),

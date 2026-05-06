@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../theme/app_colors.dart';
 import '../shared/external_actions.dart';
@@ -15,27 +16,58 @@ class MartsPage extends StatefulWidget {
 class _MartsPageState extends State<MartsPage> {
   String _query = '';
   String _filter = 'all';
+  Position? _currentPosition;
+  bool _locationBusy = false;
+  String? _locationMessage;
 
   @override
   Widget build(BuildContext context) {
-    final marts = flyerItems.where((item) {
-      final dealCount = _dealCount(item);
-      final queryMatch =
-          _query.isEmpty ||
-          item.martName.contains(_query) ||
-          item.address.contains(_query) ||
-          item.title.contains(_query);
-      final filterMatch = switch (_filter) {
-        'deals' => dealCount > 0,
-        'open24' => item.businessHours.contains('24시간'),
-        'needsCheck' =>
-          item.businessHours.contains('확인 필요') ||
-              item.businessHours.contains('정보 없음') ||
-              item.parkingInfo.contains('확인 필요'),
-        _ => true,
-      };
-      return queryMatch && filterMatch;
-    }).toList();
+    final marts = flyerItems
+        .map((item) {
+          final distanceMeters = _currentPosition == null
+              ? null
+              : Geolocator.distanceBetween(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                  item.latitude,
+                  item.longitude,
+                );
+          return _MartListEntry(
+            item: item,
+            dealCount: _dealCount(item),
+            distanceMeters: distanceMeters,
+          );
+        })
+        .where((entry) {
+          final item = entry.item;
+          final dealCount = _dealCount(item);
+          final queryMatch =
+              _query.isEmpty ||
+              item.martName.contains(_query) ||
+              item.address.contains(_query) ||
+              item.title.contains(_query);
+          final filterMatch = switch (_filter) {
+            'deals' => dealCount > 0,
+            'nearby' =>
+              entry.distanceMeters == null || entry.distanceMeters! <= 5000,
+            'open24' => item.businessHours.contains('24시간'),
+            'needsCheck' =>
+              item.businessHours.contains('확인 필요') ||
+                  item.businessHours.contains('정보 없음') ||
+                  item.parkingInfo.contains('확인 필요'),
+            _ => true,
+          };
+          return queryMatch && filterMatch;
+        })
+        .toList();
+
+    if (_currentPosition != null) {
+      marts.sort(
+        (a, b) => (a.distanceMeters ?? double.infinity).compareTo(
+          b.distanceMeters ?? double.infinity,
+        ),
+      );
+    }
 
     return ColoredBox(
       color: AppColors.background,
@@ -65,16 +97,24 @@ class _MartsPageState extends State<MartsPage> {
             ),
           ),
           const SizedBox(height: 12),
-          _MartFilterChips(
-            selected: _filter,
-            onSelected: (value) => setState(() => _filter = value),
+          _MartFilterChips(selected: _filter, onSelected: _selectFilter),
+          const SizedBox(height: 10),
+          _LocationSortCard(
+            hasLocation: _currentPosition != null,
+            isBusy: _locationBusy,
+            message: _locationMessage,
+            onTap: _useCurrentLocation,
           ),
           const SizedBox(height: 18),
           if (marts.isEmpty)
             const _EmptyMartCard()
           else
             ...marts.map(
-              (item) => _MartCard(item: item, dealCount: _dealCount(item)),
+              (entry) => _MartCard(
+                item: entry.item,
+                dealCount: entry.dealCount,
+                distanceText: _formatDistance(entry.distanceMeters),
+              ),
             ),
         ],
       ),
@@ -84,6 +124,92 @@ class _MartsPageState extends State<MartsPage> {
   int _dealCount(FlyerItem item) {
     return dealItems.where((deal) => deal.martName == item.martName).length;
   }
+
+  Future<void> _selectFilter(String value) async {
+    if (!mounted) return;
+    setState(() => _filter = value);
+    if (value == 'nearby' && _currentPosition == null) {
+      await _useCurrentLocation();
+    }
+  }
+
+  Future<void> _useCurrentLocation() async {
+    if (_locationBusy || !mounted) return;
+    setState(() {
+      _locationBusy = true;
+      _locationMessage = null;
+    });
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!mounted) return;
+      if (!serviceEnabled) {
+        setState(() {
+          _locationMessage = '기기 위치 서비스가 꺼져 있어요.';
+        });
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (!mounted) return;
+
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _locationMessage = '위치 권한을 허용하면 가까운 순으로 볼 수 있어요.';
+        });
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _locationMessage = '브라우저/기기 설정에서 위치 권한을 허용해주세요.';
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      );
+      if (!mounted) return;
+      setState(() {
+        _currentPosition = position;
+        _locationMessage = '현재 위치 기준 가까운 순으로 정렬 중입니다.';
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _locationMessage = '현재 위치를 가져오지 못했어요. 잠시 후 다시 시도해주세요.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _locationBusy = false);
+      }
+    }
+  }
+}
+
+class _MartListEntry {
+  const _MartListEntry({
+    required this.item,
+    required this.dealCount,
+    required this.distanceMeters,
+  });
+
+  final FlyerItem item;
+  final int dealCount;
+  final double? distanceMeters;
+}
+
+String? _formatDistance(double? meters) {
+  if (meters == null) return null;
+  if (meters < 1000) {
+    return '${meters.round()}m';
+  }
+  return '${(meters / 1000).toStringAsFixed(1)}km';
 }
 
 class _MartSummaryCard extends StatelessWidget {
@@ -203,6 +329,7 @@ class _MartFilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     const filters = [
       ('all', '전체'),
+      ('nearby', '가까운 순'),
       ('deals', '특가 있음'),
       ('open24', '24시간'),
       ('needsCheck', '확인 필요'),
@@ -238,6 +365,73 @@ class _MartFilterChips extends StatelessWidget {
   }
 }
 
+class _LocationSortCard extends StatelessWidget {
+  const _LocationSortCard({
+    required this.hasLocation,
+    required this.isBusy,
+    required this.message,
+    required this.onTap,
+  });
+
+  final bool hasLocation;
+  final bool isBusy;
+  final String? message;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: hasLocation ? AppColors.softGreen : AppColors.surface,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: hasLocation ? const Color(0xFFDDEFE5) : AppColors.frame,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              hasLocation ? Icons.my_location : Icons.location_searching,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                message ??
+                    (hasLocation
+                        ? '현재 위치 기준으로 가까운 마트부터 보여드려요.'
+                        : '현재 위치를 켜면 가까운 마트부터 볼 수 있어요.'),
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: isBusy ? null : onTap,
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: AppColors.primaryGreen,
+              ),
+              child: Text(
+                isBusy
+                    ? '확인 중'
+                    : hasLocation
+                    ? '새로고침'
+                    : '위치 사용',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyMartCard extends StatelessWidget {
   const _EmptyMartCard();
 
@@ -262,10 +456,15 @@ class _EmptyMartCard extends StatelessWidget {
 }
 
 class _MartCard extends StatelessWidget {
-  const _MartCard({required this.item, required this.dealCount});
+  const _MartCard({
+    required this.item,
+    required this.dealCount,
+    required this.distanceText,
+  });
 
   final FlyerItem item;
   final int dealCount;
+  final String? distanceText;
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +546,13 @@ class _MartCard extends StatelessWidget {
                                   icon: Icons.place_outlined,
                                   text: item.address,
                                 ),
+                                if (distanceText != null) ...[
+                                  const SizedBox(height: 4),
+                                  _MetaLine(
+                                    icon: Icons.my_location,
+                                    text: '현재 위치에서 약 $distanceText',
+                                  ),
+                                ],
                                 const SizedBox(height: 4),
                                 _MetaLine(
                                   icon: Icons.schedule,

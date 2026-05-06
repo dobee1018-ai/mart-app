@@ -67,3 +67,22 @@ enum PointStatus {
   const PointStatus(this.label);
   final String label;
 }
+
+enum ReviewStatus {
+  scheduled('공개 대기'),
+  needsReview('관리자 검토'),
+  blocked('자동 차단'),
+  published('공개'),
+  hidden('숨김');
+
+  const ReviewStatus(this.label);
+  final String label;
+}
+
+enum ReviewTargetType {
+  mart('마트 리뷰'),
+  product('상품 리뷰');
+
+  const ReviewTargetType(this.label);
+  final String label;
+}

@@ -6,8 +6,12 @@ class ShoppingMemo {
     required this.userId,
     required this.productName,
     required this.createdAt,
+    this.kind = 'memo',
+    this.martName,
+    this.price,
     this.quantity,
     this.unit,
+    this.cartQuantity,
     this.targetPrice,
     this.alertEnabled = true,
     this.completed = false,
@@ -17,8 +21,12 @@ class ShoppingMemo {
   final String userId;
   final String productName;
   final DateTime createdAt;
+  final String kind;
+  final String? martName;
+  final int? price;
   final double? quantity;
   final String? unit;
+  final int? cartQuantity;
   final int? targetPrice;
   final bool alertEnabled;
   final bool completed;
@@ -29,8 +37,12 @@ class ShoppingMemo {
       userId: data['userId'] as String? ?? '',
       productName: data['productName'] as String? ?? '',
       createdAt: dateTimeFromFirestore(data['createdAt']) ?? DateTime.now(),
+      kind: data['kind'] as String? ?? 'memo',
+      martName: data['martName'] as String?,
+      price: (data['price'] as num?)?.toInt(),
       quantity: (data['quantity'] as num?)?.toDouble(),
       unit: data['unit'] as String?,
+      cartQuantity: (data['cartQuantity'] as num?)?.toInt(),
       targetPrice: data['targetPrice'] as int?,
       alertEnabled: data['alertEnabled'] as bool? ?? true,
       completed: data['completed'] as bool? ?? false,
@@ -42,8 +54,12 @@ class ShoppingMemo {
       'userId': userId,
       'productName': productName,
       'createdAt': dateTimeToFirestore(createdAt),
+      'kind': kind,
+      'martName': martName,
+      'price': price,
       'quantity': quantity,
       'unit': unit,
+      'cartQuantity': cartQuantity,
       'targetPrice': targetPrice,
       'alertEnabled': alertEnabled,
       'completed': completed,

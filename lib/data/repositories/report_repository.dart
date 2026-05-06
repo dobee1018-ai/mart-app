@@ -6,7 +6,7 @@ import '../firestore_collections.dart';
 
 class ReportRepository {
   ReportRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -29,6 +29,18 @@ class ReportRepository {
     return _collection
         .where('approvalStatus', isEqualTo: ApprovalStatus.pending.name)
         .orderBy('createdAt')
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => Report.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
+  }
+
+  Stream<List<Report>> watchAdminReports({int limit = 100}) {
+    return _collection
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
         .snapshots()
         .map(
           (snapshot) => snapshot.docs

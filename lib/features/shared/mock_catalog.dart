@@ -58,6 +58,8 @@ class FlyerItem {
     required this.period,
     required this.imageUrl,
     required this.address,
+    required this.latitude,
+    required this.longitude,
     required this.businessHours,
     required this.phoneNumber,
     required this.closedDays,
@@ -72,6 +74,8 @@ class FlyerItem {
   final String period;
   final String imageUrl;
   final String address;
+  final double latitude;
+  final double longitude;
   final String businessHours;
   final String phoneNumber;
   final String closedDays;
@@ -1061,6 +1065,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80',
     address: '강원 원주시 서원대로 411',
+    latitude: 37.3303007369883,
+    longitude: 127.950960743815,
     businessHours: '24시간 (연중무휴)',
     phoneNumber: '033-764-4945',
     closedDays: '연중무휴',
@@ -1076,6 +1082,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80',
     address: '강원 원주시 남원로534번길 64-1',
+    latitude: 37.3277032604811,
+    longitude: 127.952717323244,
     businessHours: '07:00~22:00',
     phoneNumber: '033-765-7737',
     closedDays: '확인 필요',
@@ -1091,6 +1099,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
     address: '강원 원주시 현충로 12',
+    latitude: 37.3569,
+    longitude: 127.9549,
     businessHours: '07:00~22:00',
     phoneNumber: '033-744-9600',
     closedDays: '확인 필요',
@@ -1106,6 +1116,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80',
     address: '강원 원주시 현충로 305',
+    latitude: 37.3806563319568,
+    longitude: 127.947552772827,
     businessHours: '07:00~22:30',
     phoneNumber: '033-743-1030',
     closedDays: '확인 필요',
@@ -1121,6 +1133,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80',
     address: '강원 원주시 문막읍 건등로 62 1층',
+    latitude: 37.3147389767589,
+    longitude: 127.822601487375,
     businessHours: '08:00~22:00',
     phoneNumber: '033-744-1008',
     closedDays: '확인 필요',
@@ -1136,6 +1150,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
     address: '강원 원주시 북원로 2501',
+    latitude: 37.3708,
+    longitude: 127.9399,
     businessHours: '06:00~23:00',
     phoneNumber: '033-733-5400',
     closedDays: '확인 필요',
@@ -1151,6 +1167,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=800&q=80',
     address: '강원 원주시 치악로 1527 판부농협',
+    latitude: 37.3202105,
+    longitude: 127.9648052,
     businessHours: '동절기 08:00~21:00 / 하절기 08:00~22:00',
     phoneNumber: '033-769-0200',
     closedDays: '확인 필요',
@@ -1166,6 +1184,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80',
     address: '강원 원주시 단구로 227',
+    latitude: 37.3334,
+    longitude: 127.9517,
     businessHours: '07:00~22:30',
     phoneNumber: '0507-1424-2523',
     closedDays: '확인 필요',
@@ -1181,6 +1201,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80',
     address: '강원 원주시 서원대로 121-9 1층',
+    latitude: 37.3469676193714,
+    longitude: 127.927832482842,
     businessHours: '09:00~19:00',
     phoneNumber: '033-735-0429',
     closedDays: '일요일 휴무',
@@ -1196,6 +1218,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
     address: '강원 원주시 북원로 2638 1층 우리홈마켓',
+    latitude: 37.3787706,
+    longitude: 127.9468679,
     businessHours: '24시간 영업, 일요일 22:00 마감, 월요일 08:00 오픈',
     phoneNumber: '033-744-5515',
     closedDays: '확인 필요',
@@ -1212,6 +1236,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1550989460-0adf9ea622e2?w=800&q=80',
     address: '강원 원주시 현충로 54',
+    latitude: 37.3605,
+    longitude: 127.9559,
     businessHours: '08:00~22:00',
     phoneNumber: '0507-1345-8200',
     closedDays: '확인 필요',
@@ -1227,6 +1253,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80',
     address: '강원 원주시 백간길 25',
+    latitude: 37.3520827,
+    longitude: 127.9263005,
     businessHours: '08:00~22:00',
     phoneNumber: '0507-1428-6672',
     closedDays: '확인 필요',
@@ -1242,6 +1270,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80',
     address: '강원 원주시 문막읍 원문로 1587',
+    latitude: 37.3207425474695,
+    longitude: 127.833485536996,
     businessHours: '정보 없음',
     phoneNumber: '033-734-1066',
     closedDays: '확인 필요',
@@ -1257,6 +1287,8 @@ const flyerItems = [
     imageUrl:
         'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
     address: '강원 원주시 행구로 148',
+    latitude: 37.3417148743283,
+    longitude: 127.972513317756,
     businessHours: '08:00~22:00',
     phoneNumber: '033-733-8811',
     closedDays: '확인 필요',
@@ -1342,7 +1374,187 @@ const recipeSuggestions = [
       '카레가루를 풀어 넣고 농도가 날 때까지 끓인 뒤 밥과 함께 냅니다.',
     ],
     relatedDealIds: ['onion', 'potato', 'oil'],
-    tag: '소분모임 연계',
+    tag: '양파 특가',
+  ),
+  RecipeSuggestion(
+    title: '두부 고추장조림',
+    reason: '두부 특가와 기본 양념으로 만드는 밥반찬',
+    time: '18분',
+    difficulty: '쉬움',
+    budget: 5600,
+    imageUrl:
+        'https://images.unsplash.com/photo-1593357849627-cbbc9fda6b05?w=800&q=80',
+    ingredients: ['두부', '양파', '대파', '고추장', '간장', '설탕', '식용유'],
+    steps: [
+      '두부는 물기를 빼고 도톰하게 썰어 팬에 노릇하게 굽습니다.',
+      '고추장, 간장, 설탕, 물을 섞어 조림 양념을 만듭니다.',
+      '양파와 대파를 넣고 양념을 부어 중약불에서 졸입니다.',
+      '양념이 자작해지면 두부에 끼얹어가며 마무리합니다.',
+    ],
+    relatedDealIds: ['tofu', 'gochujang', 'onion'],
+    tag: '두부 특가',
+  ),
+  RecipeSuggestion(
+    title: '콩나물 김치국',
+    reason: '김치와 콩나물만 있으면 빠르게 끓이는 국물 메뉴',
+    time: '20분',
+    difficulty: '쉬움',
+    budget: 3900,
+    imageUrl:
+        'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
+    ingredients: ['김치', '콩나물', '대파', '고춧가루', '간장', '다진마늘'],
+    steps: [
+      '김치는 먹기 좋게 썰고 콩나물은 씻어 준비합니다.',
+      '냄비에 물을 붓고 김치와 고춧가루를 넣어 먼저 끓입니다.',
+      '콩나물과 다진마늘을 넣고 뚜껑을 덮어 익힙니다.',
+      '대파와 간장으로 간을 맞춰 마무리합니다.',
+    ],
+    relatedDealIds: ['bean_sprouts'],
+    tag: '국물 추천',
+  ),
+  RecipeSuggestion(
+    title: '참치 김치볶음밥',
+    reason: '참치캔과 김치, 밥으로 만드는 빠른 한 끼',
+    time: '15분',
+    difficulty: '쉬움',
+    budget: 6200,
+    imageUrl:
+        'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80',
+    ingredients: ['참치', '김치', '밥', '계란', '대파', '참기름', '식용유'],
+    steps: [
+      '김치와 대파를 잘게 썰고 참치는 기름을 가볍게 뺍니다.',
+      '팬에 식용유를 두르고 대파와 김치를 먼저 볶습니다.',
+      '참치와 밥을 넣고 고슬하게 볶은 뒤 참기름을 더합니다.',
+      '계란 프라이를 올리면 든든한 한 끼가 됩니다.',
+    ],
+    relatedDealIds: ['tuna', 'egg'],
+    tag: '15분 한 끼',
+  ),
+  RecipeSuggestion(
+    title: '닭가슴살 샐러드볼',
+    reason: '닭가슴살과 샐러드채소로 가볍게 먹는 저녁',
+    time: '12분',
+    difficulty: '쉬움',
+    budget: 7400,
+    imageUrl:
+        'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=800&q=80',
+    ingredients: ['닭가슴살', '샐러드채소', '계란', '요거트', '소금'],
+    steps: [
+      '닭가슴살은 데우거나 팬에 구워 한입 크기로 자릅니다.',
+      '계란은 삶거나 프라이로 준비합니다.',
+      '샐러드채소 위에 닭가슴살과 계란을 올립니다.',
+      '요거트에 소금 약간을 섞어 가벼운 드레싱으로 곁들입니다.',
+    ],
+    relatedDealIds: ['chicken_breast', 'salad_mix', 'yogurt', 'egg'],
+    tag: '가벼운 메뉴',
+  ),
+  RecipeSuggestion(
+    title: '감자채 계란전',
+    reason: '감자와 계란으로 만드는 저렴한 부침 메뉴',
+    time: '22분',
+    difficulty: '보통',
+    budget: 5200,
+    imageUrl:
+        'https://images.unsplash.com/photo-1518013431117-eb1465fa5752?w=800&q=80',
+    ingredients: ['감자', '계란', '양파', '소금', '식용유'],
+    steps: [
+      '감자와 양파를 얇게 채 썰어 소금으로 가볍게 간합니다.',
+      '계란을 풀어 감자채와 섞습니다.',
+      '팬에 식용유를 두르고 얇게 펼쳐 앞뒤로 부칩니다.',
+      '겉은 바삭하고 속은 촉촉할 때 접시에 담습니다.',
+    ],
+    relatedDealIds: ['potato', 'egg', 'onion'],
+    tag: '감자 특가',
+  ),
+  RecipeSuggestion(
+    title: '만두 라면전골',
+    reason: '라면과 냉동만두로 든든하게 끓이는 가성비 전골',
+    time: '18분',
+    difficulty: '쉬움',
+    budget: 6800,
+    imageUrl:
+        'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80',
+    ingredients: ['라면', '만두', '대파', '양파', '고춧가루', '계란'],
+    steps: [
+      '냄비에 물을 붓고 라면스프와 고춧가루를 넣어 끓입니다.',
+      '만두, 양파, 대파를 넣고 먼저 익힙니다.',
+      '라면을 넣고 면이 풀어질 때까지 끓입니다.',
+      '마지막에 계란을 넣어 취향에 맞게 익힙니다.',
+    ],
+    relatedDealIds: ['ramen', 'frozen_dumpling', 'egg'],
+    tag: '분식 특가',
+  ),
+  RecipeSuggestion(
+    title: '사과 요거트볼',
+    reason: '사과와 요거트로 만드는 간단한 아침/간식',
+    time: '7분',
+    difficulty: '아주 쉬움',
+    budget: 4500,
+    imageUrl:
+        'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800&q=80',
+    ingredients: ['사과', '요거트', '설탕'],
+    steps: [
+      '사과는 깨끗이 씻어 먹기 좋은 크기로 썹니다.',
+      '그릇에 요거트를 담고 사과를 올립니다.',
+      '단맛이 부족하면 설탕을 아주 조금 더합니다.',
+      '차갑게 먹으면 아침 대용이나 간식으로 좋습니다.',
+    ],
+    relatedDealIds: ['apple', 'yogurt'],
+    tag: '간식 추천',
+  ),
+  RecipeSuggestion(
+    title: '우유 감자수프',
+    reason: '감자와 우유로 부드럽게 만드는 아침 수프',
+    time: '25분',
+    difficulty: '보통',
+    budget: 6400,
+    imageUrl:
+        'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80',
+    ingredients: ['감자', '우유', '양파', '소금', '식용유'],
+    steps: [
+      '감자와 양파를 얇게 썰어 준비합니다.',
+      '냄비에 식용유를 두르고 양파를 투명해질 때까지 볶습니다.',
+      '감자와 물을 넣고 부드러워질 때까지 끓입니다.',
+      '우유를 넣고 약불에서 데운 뒤 소금으로 간합니다.',
+    ],
+    relatedDealIds: ['potato', 'milk_1l', 'onion'],
+    tag: '부드러운 메뉴',
+  ),
+  RecipeSuggestion(
+    title: '돼지고기 된장찌개',
+    reason: '돼지고기와 두부를 넣어 든든하게 끓이는 찌개',
+    time: '30분',
+    difficulty: '보통',
+    budget: 8800,
+    imageUrl:
+        'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&q=80',
+    ingredients: ['돼지고기', '두부', '양파', '대파', '된장', '다진마늘'],
+    steps: [
+      '돼지고기와 양파, 대파, 두부를 먹기 좋게 준비합니다.',
+      '냄비에 물을 끓이고 된장을 풀어 국물 맛을 냅니다.',
+      '돼지고기와 양파를 넣어 익힌 뒤 두부를 넣습니다.',
+      '다진마늘과 대파를 넣고 한소끔 더 끓입니다.',
+    ],
+    relatedDealIds: ['pork_front', 'tofu', 'onion'],
+    tag: '찌개 추천',
+  ),
+  RecipeSuggestion(
+    title: '밀가루 부추 없는 간장수제비',
+    reason: '밀가루와 기본 양념으로 만드는 초간단 국물식',
+    time: '28분',
+    difficulty: '보통',
+    budget: 3600,
+    imageUrl:
+        'https://images.unsplash.com/photo-1547592180-85f173990554?w=800&q=80',
+    ingredients: ['밀가루', '간장', '대파', '다진마늘', '소금'],
+    steps: [
+      '밀가루에 물과 소금을 조금씩 넣어 말랑한 반죽을 만듭니다.',
+      '냄비에 물을 끓이고 간장과 다진마늘로 국물 간을 합니다.',
+      '반죽을 얇게 떼어 넣고 익을 때까지 끓입니다.',
+      '대파를 넣고 부족한 간은 소금으로 맞춥니다.',
+    ],
+    relatedDealIds: ['flour_bulk', 'soy_sauce'],
+    tag: '초저가 메뉴',
   ),
 ];
 

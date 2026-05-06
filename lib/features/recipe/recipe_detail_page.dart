@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../product/product_detail_page.dart';
+import '../shared/app_snack_bar.dart';
 import '../shared/mock_catalog.dart';
 import '../shared/pantry_settings_sheet.dart';
 import '../shared/pantry_store.dart';
@@ -476,15 +477,59 @@ class _IngredientSection extends StatelessWidget {
                 runSpacing: 8,
                 children: recipe.ingredients.map((ingredient) {
                   final owned = store.contains(ingredient);
-                  return Chip(
+                  return ActionChip(
                     avatar: Icon(
-                      owned ? Icons.check_circle : Icons.add_circle_outline,
+                      owned ? Icons.check_circle : Icons.add,
                       size: 18,
+                      color: owned
+                          ? const Color(0xFF168A52)
+                          : AppColors.accentOrange,
                     ),
                     label: Text(ingredient),
+                    tooltip: owned ? '보유 재료' : '우리집 재료에 추가',
+                    onPressed: () {
+                      if (owned) {
+                        showTimedSnackBar(
+                          context,
+                          message: '$ingredient은 이미 우리집 재료에 있습니다.',
+                        );
+                        return;
+                      }
+
+                      store.add(ingredient);
+                      showTimedSnackBar(
+                        context,
+                        message: '$ingredient을 우리집 재료에 추가했습니다.',
+                      );
+                    },
                     backgroundColor: owned
                         ? AppColors.softGreen
-                        : AppColors.surfaceMuted,
+                        : AppColors.softOrange,
+                    disabledColor: AppColors.softGreen,
+                    side: BorderSide(
+                      color: owned
+                          ? const Color(0xFF2F9E65)
+                          : const Color(0xFFFFD99B),
+                      width: owned ? 1.35 : 1.1,
+                    ),
+                    labelStyle: TextStyle(
+                      color: owned
+                          ? const Color(0xFF168A52)
+                          : AppColors.accentOrange,
+                      fontWeight: FontWeight.w900,
+                    ),
+                    iconTheme: IconThemeData(
+                      color: owned
+                          ? AppColors.primaryGreen
+                          : AppColors.accentOrange,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   );
                 }).toList(),
               ),

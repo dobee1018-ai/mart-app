@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../my/my_page.dart';
 import '../product/product_detail_page.dart';
 import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
@@ -43,6 +44,8 @@ class MartDetailPage extends StatelessWidget {
                 _MartSummary(flyer: flyer, dealCount: deals.length),
                 const _SectionDivider(),
                 _DealSection(deals: deals),
+                const _SectionDivider(),
+                _MartReviewSection(flyer: flyer),
                 const _SectionDivider(),
                 _SimpleInfoSection(flyer: flyer),
               ],
@@ -290,6 +293,94 @@ class _SimpleInfoSection extends StatelessWidget {
                   _CompactInfoLine(
                     icon: Icons.schedule,
                     text: _cleanInfo(flyer.businessHours),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MartReviewSection extends StatelessWidget {
+  const _MartReviewSection({required this.flyer});
+
+  final FlyerItem flyer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(child: _SectionTitle('마트 리뷰')),
+              TextButton.icon(
+                onPressed: () => _openMartReview(context, flyer.martName),
+                icon: const Icon(Icons.rate_review_outlined, size: 18),
+                label: const Text('작성'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.frame),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        color: AppColors.accentOrange,
+                        size: 22,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        '4.6',
+                        style: TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        '최근 리뷰 12개',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '신선식품 회전이 빠르고 주차가 편했다는 후기가 많아요.',
+                    style: TextStyle(
+                      color: Color(0xFF4B5563),
+                      height: 1.45,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _openMartReview(context, flyer.martName),
+                      icon: const Icon(Icons.edit_outlined),
+                      label: const Text('이 마트 리뷰 작성하기'),
+                    ),
                   ),
                 ],
               ),
@@ -621,6 +712,14 @@ void _showMartInfoSheet(BuildContext context, FlyerItem flyer) {
         },
       );
     },
+  );
+}
+
+void _openMartReview(BuildContext context, String martName) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => ReviewDetailPage(initialTarget: martName),
+    ),
   );
 }
 
