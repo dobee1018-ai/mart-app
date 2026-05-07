@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mart_app/firebase/firebase_bootstrap.dart';
-import 'package:mart_app/main.dart';
+import 'package:wonju_mart_app/firebase/firebase_bootstrap.dart';
+import 'package:wonju_mart_app/main.dart';
 
 void main() {
   testWidgets('shows migrated bottom navigation', (WidgetTester tester) async {

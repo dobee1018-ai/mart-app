@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBqz3p6pZGQ5ZufZ1zhWhXDLVxk4vbMD8s',
-    appId: '1:123049771054:android:3e69e408b8400664e8dfbf',
+    appId: '1:123049771054:android:87bcaacb005a1430e8dfbf',
     messagingSenderId: '123049771054',
     projectId: 'wonju-mart-app-1018',
     storageBucket: 'wonju-mart-app-1018.firebasestorage.app',
@@ -66,10 +66,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCv3B3SIqPyA2kdt_2fmf6tzuOBW3Divm0',
-    appId: '1:123049771054:ios:7e73c7768306af7fe8dfbf',
+    appId: '1:123049771054:ios:40fa88cf54c7a8fce8dfbf',
     messagingSenderId: '123049771054',
     projectId: 'wonju-mart-app-1018',
     storageBucket: 'wonju-mart-app-1018.firebasestorage.app',
-    iosBundleId: 'com.example.martApp',
+    iosBundleId: 'com.wonjumart.app',
   );
 }

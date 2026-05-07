@@ -4,72 +4,129 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
 import '../shared/mock_catalog.dart';
+import '../shared/open_recipe_loader.dart';
 import '../shared/pantry_settings_sheet.dart';
 import '../shared/pantry_store.dart';
 import 'recipe_detail_page.dart';
 
-class RecipePage extends StatelessWidget {
+class RecipePage extends StatefulWidget {
   const RecipePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: PantryStore.instance,
-      builder: (context, child) {
-        final store = PantryStore.instance;
-        final recommendations = _rankRecipeRecommendations(store);
-        final matchedRecipeCount = recommendations
-            .where((entry) => entry.matchCount > 0)
-            .length;
+  State<RecipePage> createState() => _RecipePageState();
+}
 
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Text(
-              '오늘의 동네마트 특가와 냉장고 재료로 만드는 추천 레시피',
-              style: TextStyle(color: Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 16),
-            _PersonalRecipeCard(
-              selectedCount: store.selected.length,
-              matchedRecipeCount: matchedRecipeCount,
-            ),
-            const SizedBox(height: 14),
-            _BudgetCard(matchCount: store.selected.length),
-            const SizedBox(height: 22),
-            const _SectionTitle(
-              icon: Icons.local_fire_department,
-              text: '특가 상품 활용 레시피',
-            ),
-            const SizedBox(height: 12),
-            _RecipeCarousel(recommendations: recommendations.take(10).toList()),
-            const SizedBox(height: 24),
-            Row(
+class _RecipePageState extends State<RecipePage> {
+  late final Future<List<RecipeSuggestion>> _recipesFuture =
+      loadOpenRecipeSuggestions();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<RecipeSuggestion>>(
+      future: _recipesFuture,
+      initialData: recipeSuggestions,
+      builder: (context, snapshot) {
+        final recipes = snapshot.data ?? recipeSuggestions;
+
+        return AnimatedBuilder(
+          animation: PantryStore.instance,
+          builder: (context, child) {
+            final store = PantryStore.instance;
+            final recommendations = _rankRecipeRecommendations(store, recipes);
+            final matchedRecipeCount = recommendations
+                .where((entry) => entry.matchCount > 0)
+                .length;
+
+            return ListView(
+              padding: const EdgeInsets.all(20),
               children: [
-                const Expanded(
-                  child: _SectionTitle(
-                    icon: Icons.ac_unit,
-                    text: '우리집 냉장고 비우기',
-                  ),
+                Text(
+                  '오늘의 동네마트 특가와 냉장고 재료로 만드는 추천 레시피 ${recipes.length}개',
+                  style: const TextStyle(color: Color(0xFF6B7280)),
                 ),
-                TextButton(
-                  onPressed: () => showPantrySettingsSheet(context),
-                  child: const Text('재료 설정'),
+                const SizedBox(height: 16),
+                _PersonalRecipeCard(
+                  selectedCount: store.selected.length,
+                  matchedRecipeCount: matchedRecipeCount,
                 ),
+                const SizedBox(height: 14),
+                _BudgetCard(matchCount: store.selected.length),
+                const SizedBox(height: 22),
+                const _SectionTitle(
+                  icon: Icons.local_fire_department,
+                  text: '특가 상품 활용 레시피',
+                ),
+                const SizedBox(height: 12),
+                _RecipeCarousel(
+                  recommendations: recommendations.take(10).toList(),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: _SectionTitle(
+                        icon: Icons.ac_unit,
+                        text: '우리집 냉장고 비우기',
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => showPantrySettingsSheet(context),
+                      child: const Text('재료 설정'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _PantryChips(store: store),
+                const SizedBox(height: 18),
+                if (recommendations.isEmpty)
+                  const _NoRecipeCard()
+                else
+                  ...recommendations
+                      .take(8)
+                      .map((entry) => _FridgeRecipeTile(entry: entry)),
+                const SizedBox(height: 14),
+                const _RecipeSourceNotice(),
               ],
-            ),
-            const SizedBox(height: 10),
-            _PantryChips(store: store),
-            const SizedBox(height: 18),
-            if (recommendations.isEmpty)
-              const _NoRecipeCard()
-            else
-              ...recommendations
-                  .take(8)
-                  .map((entry) => _FridgeRecipeTile(entry: entry)),
-          ],
+            );
+          },
         );
       },
+    );
+  }
+}
+
+class _RecipeSourceNotice extends StatelessWidget {
+  const _RecipeSourceNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F8F7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE4EAE7)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(13),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.dataset_outlined, color: AppColors.primaryGreen),
+            SizedBox(width: 9),
+            Expanded(
+              child: Text(
+                '일부 레시피는 식품의약품안전처 조리식품의 레시피 DB 공개 데이터를 기반으로 추천합니다.',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -482,7 +539,7 @@ class _FridgeRecipeTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.rice_bowl_outlined)),
+        leading: _RecipeIllustration(recipe: recipe),
         title: Text(recipe.title),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,6 +557,190 @@ class _FridgeRecipeTile extends StatelessWidget {
         trailing: _IngredientStatusBadge(tone: tone),
         onTap: () => _openRecipeDetail(context, recipe),
       ),
+    );
+  }
+}
+
+class _RecipeIllustration extends StatelessWidget {
+  const _RecipeIllustration({required this.recipe});
+
+  final RecipeSuggestion recipe;
+
+  @override
+  Widget build(BuildContext context) {
+    final spec = _RecipeIllustrationSpec.from(recipe);
+    return SizedBox(
+      width: 58,
+      height: 58,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: spec.background,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: spec.border),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -10,
+              bottom: -10,
+              child: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: spec.accent.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Center(
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.86),
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(spec.icon, color: spec.accent, size: 23),
+              ),
+            ),
+            Positioned(
+              right: 7,
+              top: 7,
+              child: Container(
+                width: 13,
+                height: 13,
+                decoration: BoxDecoration(
+                  color: spec.dot,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surface, width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecipeIllustrationSpec {
+  const _RecipeIllustrationSpec({
+    required this.icon,
+    required this.background,
+    required this.border,
+    required this.accent,
+    required this.dot,
+  });
+
+  final IconData icon;
+  final Color background;
+  final Color border;
+  final Color accent;
+  final Color dot;
+
+  factory _RecipeIllustrationSpec.from(RecipeSuggestion recipe) {
+    final title = recipe.title;
+    final ingredients = recipe.ingredients.join(' ');
+    final source = '$title $ingredients';
+
+    if (source.contains('볶음밥')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.rice_bowl_outlined,
+        background: Color(0xFFFFF4D8),
+        border: Color(0xFFFFE2A3),
+        accent: Color(0xFFE79614),
+        dot: Color(0xFFF8C94A),
+      );
+    }
+    if (source.contains('카레')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.soup_kitchen_outlined,
+        background: Color(0xFFFFECD8),
+        border: Color(0xFFFFD2A6),
+        accent: Color(0xFFE06C19),
+        dot: Color(0xFFFFB347),
+      );
+    }
+    if (source.contains('조림') || source.contains('두부')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.set_meal_outlined,
+        background: Color(0xFFFFEFEA),
+        border: Color(0xFFFFCABB),
+        accent: Color(0xFFD94C28),
+        dot: Color(0xFFFFD7C2),
+      );
+    }
+    if (source.contains('국') ||
+        source.contains('찌개') ||
+        source.contains('전골') ||
+        source.contains('수제비')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.ramen_dining_outlined,
+        background: Color(0xFFEAF6FF),
+        border: Color(0xFFC9E8FF),
+        accent: Color(0xFF2878B8),
+        dot: Color(0xFFFF7A59),
+      );
+    }
+    if (source.contains('샐러드')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.eco_outlined,
+        background: Color(0xFFEAF8ED),
+        border: Color(0xFFCFEFDB),
+        accent: Color(0xFF27884F),
+        dot: Color(0xFFF1C84B),
+      );
+    }
+    if (source.contains('전')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.local_pizza_outlined,
+        background: Color(0xFFFFF0DD),
+        border: Color(0xFFFFDAB0),
+        accent: Color(0xFFC66B1D),
+        dot: Color(0xFFE9B44C),
+      );
+    }
+    if (source.contains('요거트') || source.contains('사과')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.icecream_outlined,
+        background: Color(0xFFFFEDF3),
+        border: Color(0xFFFFCADB),
+        accent: Color(0xFFD94B79),
+        dot: Color(0xFF72B65A),
+      );
+    }
+    if (source.contains('수프') || source.contains('우유')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.coffee_outlined,
+        background: Color(0xFFF4F0E8),
+        border: Color(0xFFE3D8C7),
+        accent: Color(0xFF8B6A45),
+        dot: Color(0xFFFFD36E),
+      );
+    }
+    if (source.contains('제육') || source.contains('돼지고기')) {
+      return const _RecipeIllustrationSpec(
+        icon: Icons.lunch_dining_outlined,
+        background: Color(0xFFFFECE6),
+        border: Color(0xFFFFCBBE),
+        accent: Color(0xFFC94C2E),
+        dot: Color(0xFF4FA66A),
+      );
+    }
+
+    return const _RecipeIllustrationSpec(
+      icon: Icons.restaurant_menu,
+      background: AppColors.softGreen,
+      border: Color(0xFFCFEBDC),
+      accent: AppColors.primaryGreen,
+      dot: AppColors.accentOrange,
     );
   }
 }
@@ -643,10 +884,13 @@ class _IngredientMatchTone {
   final Color foreground;
 }
 
-List<_RecipeRecommendation> _rankRecipeRecommendations(PantryStore store) {
+List<_RecipeRecommendation> _rankRecipeRecommendations(
+  PantryStore store,
+  List<RecipeSuggestion> recipes,
+) {
   final selected = store.selected;
   final dealIds = dealItems.map((deal) => deal.id).toSet();
-  final recommendations = recipeSuggestions.map((recipe) {
+  final recommendations = recipes.map((recipe) {
     final matchCount = store.matchCount(recipe.ingredients);
     final missing = recipe.ingredients
         .where((ingredient) => !selected.contains(ingredient))

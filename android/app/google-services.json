@@ -39,10 +39,46 @@
               "client_type": 3
             },
             {
-              "client_id": "123049771054-d65jj4087dilca42lkn24v8ssf946aqe.apps.googleusercontent.com",
+              "client_id": "123049771054-d53t1slhmd2pgk9s7t9inc5uiobnu655.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.martApp"
+                "bundle_id": "com.wonjumart.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123049771054:android:87bcaacb005a1430e8dfbf",
+        "android_client_info": {
+          "package_name": "com.wonjumart.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "123049771054-p1hn8ecfg26srt6heaqh84lj7rgmlkhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqz3p6pZGQ5ZufZ1zhWhXDLVxk4vbMD8s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "123049771054-p1hn8ecfg26srt6heaqh84lj7rgmlkhs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "123049771054-d53t1slhmd2pgk9s7t9inc5uiobnu655.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wonjumart.app"
               }
             }
           ]

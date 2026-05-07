@@ -1,4 +1,4 @@
-# mart_app
+# 원주마트 앱
 
 A new Flutter project.
 

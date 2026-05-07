@@ -6,7 +6,7 @@ import '../firestore_collections.dart';
 
 class MartRepository {
   MartRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 

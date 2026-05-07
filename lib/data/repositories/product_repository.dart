@@ -5,7 +5,7 @@ import '../firestore_collections.dart';
 
 class ProductRepository {
   ProductRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -14,10 +14,10 @@ class ProductRepository {
 
   Stream<List<Product>> watchProducts() {
     return _collection.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => Product.fromMap(doc.id, doc.data()))
-              .toList(),
-        );
+      (snapshot) => snapshot.docs
+          .map((doc) => Product.fromMap(doc.id, doc.data()))
+          .toList(),
+    );
   }
 
   Stream<List<Product>> searchProducts(String query) {

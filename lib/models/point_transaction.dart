@@ -28,7 +28,9 @@ class PointTransaction {
       userId: data['userId'] as String? ?? '',
       type: data['type'] as String? ?? '',
       amount: data['amount'] as int? ?? 0,
-      status: PointStatus.values.byName(data['status'] as String? ?? 'scheduled'),
+      status: PointStatus.values.byName(
+        data['status'] as String? ?? 'scheduled',
+      ),
       createdAt: dateTimeFromFirestore(data['createdAt']) ?? DateTime.now(),
       relatedReportId: data['relatedReportId'] as String?,
       processedAt: dateTimeFromFirestore(data['processedAt']),

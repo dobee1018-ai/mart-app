@@ -66,6 +66,7 @@ class FlyerItem {
     required this.parkingInfo,
     required this.description,
     required this.dataSource,
+    this.flyerImageUrls = const [],
   });
 
   final String id;
@@ -82,6 +83,7 @@ class FlyerItem {
   final String parkingInfo;
   final String description;
   final String dataSource;
+  final List<String> flyerImageUrls;
 }
 
 class CommunityPost {
@@ -116,6 +118,11 @@ class RecipeSuggestion {
     required this.steps,
     required this.relatedDealIds,
     this.tag = '추천',
+    this.source,
+    this.sourceRecipeId,
+    this.license,
+    this.calories,
+    this.rawIngredients,
   });
 
   final String title;
@@ -128,6 +135,33 @@ class RecipeSuggestion {
   final List<String> steps;
   final List<String> relatedDealIds;
   final String tag;
+  final String? source;
+  final String? sourceRecipeId;
+  final String? license;
+  final int? calories;
+  final String? rawIngredients;
+
+  factory RecipeSuggestion.fromJson(Map<String, dynamic> data) {
+    return RecipeSuggestion(
+      title: data['title'] as String? ?? '',
+      reason: data['reason'] as String? ?? '공공 레시피 DB 기반 추천',
+      time: data['time'] as String? ?? '20분',
+      difficulty: data['difficulty'] as String? ?? '보통',
+      budget: data['budget'] as int? ?? 6500,
+      imageUrl: data['imageUrl'] as String? ?? '',
+      ingredients: List<String>.from(data['ingredients'] as List? ?? const []),
+      steps: List<String>.from(data['steps'] as List? ?? const []),
+      relatedDealIds: List<String>.from(
+        data['relatedDealIds'] as List? ?? const [],
+      ),
+      tag: data['tag'] as String? ?? '공공 레시피',
+      source: data['source'] as String?,
+      sourceRecipeId: data['sourceRecipeId'] as String?,
+      license: data['license'] as String?,
+      calories: data['calories'] as int?,
+      rawIngredients: data['rawIngredients'] as String?,
+    );
+  }
 }
 
 class ReceiptSummary {
@@ -144,8 +178,329 @@ class ReceiptSummary {
   final int amount;
 }
 
+const _wooriHomeMartName = '우리홈마켓 원주점';
+const _wooriHomeFlyerPage1 = 'assets/flyers/woorihome_family_sale_1.jpeg';
+const _wooriHomeFlyerPage2 = 'assets/flyers/woorihome_family_sale_2.jpeg';
+
+DealItem _wooriHomeDeal({
+  required String id,
+  required String title,
+  required String category,
+  required int price,
+  required String unit,
+  required String period,
+  required String imageUrl,
+  int? originalPrice,
+  String badge = '우리홈 전단',
+  String description = '',
+}) {
+  final basePrice = originalPrice ?? price;
+  final discountRate = basePrice > price
+      ? (((basePrice - price) / basePrice) * 100).round()
+      : 0;
+  return DealItem(
+    id: id,
+    title: title,
+    martName: _wooriHomeMartName,
+    category: category,
+    price: price,
+    originalPrice: basePrice,
+    discountRate: discountRate,
+    imageUrl: imageUrl,
+    description: description.isNotEmpty
+        ? description
+        : '우리홈마켓 상상초오월 가정의 달 특가전 전단에서 확인한 행사 상품입니다. 행사 기간과 물량은 매장 사정에 따라 달라질 수 있어요.',
+    badge: badge,
+    comparisons: [
+      MartPriceComparison(
+        martName: _wooriHomeMartName,
+        productName: title,
+        price: price,
+        unit: unit,
+        distance: '북원로',
+        period: period,
+        source: '전단지',
+        isCheapest: true,
+      ),
+    ],
+  );
+}
+
+final _wooriHomeFlyerDeals = [
+  _wooriHomeDeal(
+    id: 'woorihome-tomato-box',
+    title: '완숙토마토 (5kg/1박스)',
+    category: 'veg',
+    price: 9900,
+    unit: '5kg',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://produce',
+    badge: '전기간 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-green-onion',
+    title: '대파 (1단)',
+    category: 'veg',
+    price: 990,
+    unit: '1단',
+    period: '5/1 ~ 5/5',
+    imageUrl: 'category://produce',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-potato',
+    title: '하우스감자 왕특 (100g)',
+    category: 'veg',
+    price: 299,
+    unit: '100g',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://produce',
+    badge: '전기간 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-steak-sirloin',
+    title: '프리미엄 등심 스테이크용 (100g)',
+    category: 'meat',
+    price: 2300,
+    unit: '100g',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://meat',
+    badge: '먹거리 플렉스',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-la-galbi',
+    title: '최상급 LA갈비 (100g)',
+    category: 'meat',
+    price: 2990,
+    unit: '100g',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://meat',
+    badge: '먹거리 플렉스',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-hanwoo-bulgogi',
+    title: '한우 불고기 (100g)',
+    category: 'meat',
+    price: 2990,
+    unit: '100g',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://meat',
+    badge: '먹거리 플렉스',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-hanwoo-grill',
+    title: '한우 모듬구이 (100g)',
+    category: 'meat',
+    price: 8900,
+    unit: '100g',
+    period: '5/1 ~ 5/10',
+    imageUrl: 'category://meat',
+    badge: '한우 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-cherry-tomato',
+    title: '스테비아 방울토마토 (4팩)',
+    category: 'veg',
+    price: 9900,
+    unit: '4팩',
+    period: '5/1 ~ 5/3',
+    imageUrl: 'category://produce',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-melon',
+    title: '고당도 참외 30상 (7개)',
+    category: 'veg',
+    price: 9900,
+    unit: '7개',
+    period: '5/1 ~ 5/3',
+    imageUrl: 'category://produce',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-pork-belly-neck',
+    title: '브랜드 냉장 삼겹살/목살 (100g)',
+    category: 'meat',
+    price: 1390,
+    unit: '100g',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://meat',
+    badge: '전기간 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-gold-kiwi',
+    title: '제스프리 골드키위 (10개)',
+    category: 'veg',
+    price: 9900,
+    unit: '10개',
+    period: '5/1 ~ 5/5',
+    imageUrl: 'category://produce',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-marinated-pork',
+    title: '양념 목살 주물럭 (4근)',
+    category: 'meat',
+    price: 9900,
+    unit: '4근',
+    period: '5/1 ~ 5/5',
+    imageUrl: 'category://meat',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-rotisserie-chicken',
+    title: '우리 전기구이 통닭 (2마리)',
+    category: 'processed',
+    price: 9900,
+    unit: '2마리',
+    period: '5/4 ~ 5/5',
+    imageUrl: 'category://deli',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-gift-melon',
+    title: '선물용 참외 (5kg)',
+    category: 'veg',
+    price: 19900,
+    unit: '5kg',
+    period: '5/6 ~ 5/10',
+    imageUrl: 'category://produce',
+    badge: '효도데이',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-watermelon',
+    title: '고당도 수박 (9kg 이하)',
+    category: 'veg',
+    price: 19900,
+    unit: '9kg 이하',
+    period: '5/6 ~ 5/10',
+    imageUrl: 'category://produce',
+    badge: '효도데이',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-hanwoo-bone-set',
+    title: '한우 사골 선물세트 (4kg)',
+    category: 'meat',
+    price: 19900,
+    unit: '4kg',
+    period: '5/6 ~ 5/10',
+    imageUrl: 'category://meat',
+    badge: '효도데이',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-sungsimdang-cake',
+    title: '성심당st 망고생크림케이크 2호',
+    category: 'processed',
+    price: 39900,
+    unit: '2호',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://bakery',
+    badge: '베이커리',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-sungsimdang-roll',
+    title: '성심당st 순수롤케이크',
+    category: 'processed',
+    price: 14900,
+    unit: '1개',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://bakery',
+    badge: '베이커리',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-carnation',
+    title: '생화 카네이션 화분 (1호/2호)',
+    category: 'living',
+    price: 9900,
+    originalPrice: 25000,
+    unit: '1개',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://gift',
+    badge: '가정의 달',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-water',
+    title: '고운샘물 무라벨 (2L/6입)',
+    category: 'processed',
+    price: 1700,
+    unit: '2L x 6',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://processed',
+    badge: '전기간 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-yonggari-nugget',
+    title: '하림 용가리치킨 + 치킨너겟 (300g+300g)',
+    category: 'processed',
+    price: 4990,
+    unit: '600g',
+    period: '5/4 ~ 5/5',
+    imageUrl: 'category://deli',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-asahi',
+    title: '롯데 아사히 캔 (500ml/6캔)',
+    category: 'processed',
+    price: 9900,
+    unit: '6캔',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://processed',
+    badge: '전기간 특가',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-snack-pick',
+    title: '롯데/오리온/해태/크라운 과자 골라담기 (15개)',
+    category: 'processed',
+    price: 9900,
+    unit: '15개',
+    period: '5/4 ~ 5/5',
+    imageUrl: 'category://processed',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-mini-tonkatsu',
+    title: '굿프렌즈 미니돈까스 (1kg)',
+    category: 'processed',
+    price: 2990,
+    unit: '1kg',
+    period: '5/1 ~ 5/14',
+    imageUrl: 'category://meat',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-shin-ramyun',
+    title: '신라면 (5입)',
+    category: 'processed',
+    price: 2990,
+    unit: '5입',
+    period: '5/1 ~ 5/3',
+    imageUrl: 'category://processed',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-fruit-drink',
+    title: '해태 과일촌 망고복숭아/감귤자몽 (1.5L)',
+    category: 'processed',
+    price: 990,
+    unit: '1.5L',
+    period: '5/1 ~ 5/3',
+    imageUrl: 'category://processed',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-maxim',
+    title: '맥심 모카골드 (160T+20T)',
+    category: 'processed',
+    price: 21900,
+    unit: '180T',
+    period: '5/1 ~ 5/3',
+    imageUrl: 'category://processed',
+  ),
+  _wooriHomeDeal(
+    id: 'woorihome-red-ginseng-stick',
+    title: '홍삼진 이뮨스틱 (30일)',
+    category: 'processed',
+    price: 19900,
+    unit: '30일',
+    period: '5/6 ~ 5/10',
+    imageUrl: 'category://gift',
+    badge: '효도데이',
+  ),
+];
+
 // 임시 목업 이미지입니다. 출시 전에는 마트 제공/직접 촬영/승인 이미지로 교체합니다.
-const dealItems = [
+final dealItems = [
+  ..._wooriHomeFlyerDeals,
   DealItem(
     id: 'hanwoo',
     title: '프리미엄 한우 세트 (1kg)',
@@ -1213,10 +1568,9 @@ const flyerItems = [
   FlyerItem(
     id: 'woorihome-wonju',
     martName: '우리홈마켓 원주점',
-    title: '북원로 24시간 운영 마트',
-    period: '마트 정보',
-    imageUrl:
-        'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+    title: '상상초오월 가정의 달 특가전 1탄',
+    period: '5/1 ~ 5/14',
+    imageUrl: _wooriHomeFlyerPage1,
     address: '강원 원주시 북원로 2638 1층 우리홈마켓',
     latitude: 37.3787706,
     longitude: 127.9468679,
@@ -1225,8 +1579,9 @@ const flyerItems = [
     closedDays: '확인 필요',
     parkingInfo: '주차 정보 확인 필요',
     description:
-        '북원로에 위치한 24시간 운영 마트입니다. 일요일은 22:00 마감, 월요일은 08:00 오픈 정보가 있습니다.',
-    dataSource: '기본 정보',
+        '북원로에 위치한 24시간 운영 마트입니다. 상상초오월 가정의 달 특가전 전단 기준으로 신선식품, 정육, 가공식품 행사 상품을 반영했습니다.',
+    dataSource: '사용자 제공 전단지',
+    flyerImageUrls: [_wooriHomeFlyerPage1, _wooriHomeFlyerPage2],
   ),
   FlyerItem(
     id: 'odri-food',

@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../my/my_page.dart';
 import '../product/product_detail_page.dart';
 import '../shared/app_snack_bar.dart';
+import '../shared/catalog_image.dart';
 import '../shared/mock_catalog.dart';
 import '../shared/shopping_list_store.dart';
 
@@ -20,6 +21,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   String _category = 'all';
+  _ServiceRegion _region = _serviceRegions.first;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +36,11 @@ class _SearchPageState extends State<SearchPage> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(18, 14, 18, 96),
       children: [
-        _FreshHeader(totalDeals: dealItems.length),
+        _FreshHeader(
+          totalDeals: dealItems.length,
+          region: _region,
+          onRegionTap: _showRegionSelector,
+        ),
         const SizedBox(height: 14),
         const _SearchBox(),
         const SizedBox(height: 16),
@@ -51,12 +57,38 @@ class _SearchPageState extends State<SearchPage> {
       ],
     );
   }
+
+  Future<void> _showRegionSelector() async {
+    final selected = await showModalBottomSheet<_ServiceRegion>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _RegionSelectorSheet(selectedRegion: _region),
+    );
+
+    if (selected == null || selected == _region) return;
+    if (!mounted) return;
+
+    setState(() => _region = selected);
+    if (!selected.isOpen) {
+      showTimedSnackBar(context, message: '현재는 원주시에서만 서비스 가능해요.');
+    }
+  }
 }
 
 class _FreshHeader extends StatelessWidget {
-  const _FreshHeader({required this.totalDeals});
+  const _FreshHeader({
+    required this.totalDeals,
+    required this.region,
+    required this.onRegionTap,
+  });
 
   final int totalDeals;
+  final _ServiceRegion region;
+  final VoidCallback onRegionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -67,24 +99,40 @@ class _FreshHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 20,
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(999),
+                  onTap: onRegionTap,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 3, 7, 3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          region.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(Icons.expand_more, size: 18),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 5),
-                  const Text(
-                    '원주시',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                '동네마트 특가를 신선하게 모아봤어요',
-                style: TextStyle(
+              Text(
+                region.isOpen ? '동네마트 특가를 신선하게 모아봤어요' : '현재 원주시에서만 서비스 가능해요',
+                style: const TextStyle(
                   color: AppColors.textGray,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -121,6 +169,174 @@ class _FreshHeader extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ServiceRegion {
+  const _ServiceRegion({
+    required this.name,
+    required this.detail,
+    required this.isOpen,
+  });
+
+  final String name;
+  final String detail;
+  final bool isOpen;
+}
+
+const _serviceRegions = [
+  _ServiceRegion(name: '원주시', detail: '강원특별자치도 원주시', isOpen: true),
+  _ServiceRegion(name: '춘천시', detail: '준비 중인 지역', isOpen: false),
+  _ServiceRegion(name: '강릉시', detail: '준비 중인 지역', isOpen: false),
+  _ServiceRegion(name: '횡성군', detail: '준비 중인 지역', isOpen: false),
+];
+
+class _RegionSelectorSheet extends StatelessWidget {
+  const _RegionSelectorSheet({required this.selectedRegion});
+
+  final _ServiceRegion selectedRegion;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 0, 18, 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '지역 선택',
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(13),
+              decoration: BoxDecoration(
+                color: AppColors.softOrange,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFFE3B8)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: AppColors.accentOrange,
+                    size: 20,
+                  ),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      '현재는 원주시에서만 서비스 가능해요. 다른 지역은 순차적으로 열 예정입니다.',
+                      style: TextStyle(
+                        color: AppColors.textDark,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            ..._serviceRegions.map(
+              (region) => _RegionTile(
+                region: region,
+                selected: region.name == selectedRegion.name,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RegionTile extends StatelessWidget {
+  const _RegionTile({required this.region, required this.selected});
+
+  final _ServiceRegion region;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = region.isOpen;
+    final foreground = enabled ? AppColors.textDark : AppColors.textGray;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Material(
+        color: selected ? AppColors.softGreen : AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: enabled ? () => Navigator.pop(context, region) : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected ? AppColors.primaryGreen : AppColors.frame,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  enabled ? Icons.location_on_outlined : Icons.lock_clock,
+                  color: enabled ? AppColors.primaryGreen : AppColors.textGray,
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        region.name,
+                        style: TextStyle(
+                          color: foreground,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        region.detail,
+                        style: const TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryGreen,
+                    size: 21,
+                  )
+                else if (!enabled)
+                  const Text(
+                    '준비 중',
+                    style: TextStyle(
+                      color: AppColors.textGray,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -214,8 +430,8 @@ class _HeroDeal extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
-                        child: Image.network(
-                          item.imageUrl,
+                        child: CatalogImage(
+                          source: item.imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               const _ImageFallback(),
@@ -285,18 +501,20 @@ class _HeroDeal extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '정상가 ${_won(item.originalPrice)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textGray,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        decoration: TextDecoration.lineThrough,
+                    if (item.discountRate > 0) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        '정상가 ${_won(item.originalPrice)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          decoration: TextDecoration.lineThrough,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -371,12 +589,15 @@ class _DiscountBurst extends StatelessWidget {
         ],
       ),
       child: Center(
-        child: Text(
-          '$rate%',
-          style: const TextStyle(
-            color: AppColors.surface,
-            fontSize: 16,
-            fontWeight: FontWeight.w900,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            rate > 0 ? '$rate%' : '전단',
+            style: const TextStyle(
+              color: AppColors.surface,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
       ),
@@ -580,8 +801,8 @@ class _ProductGridCard extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        item.imageUrl,
+                      CatalogImage(
+                        source: item.imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             const _ImageFallback(),
@@ -611,7 +832,9 @@ class _ProductGridCard extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            '${item.discountRate}%',
+                            item.discountRate > 0
+                                ? '${item.discountRate}%'
+                                : '전단가',
                             style: const TextStyle(
                               color: AppColors.surface,
                               fontSize: 12,

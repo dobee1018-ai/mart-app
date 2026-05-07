@@ -45,7 +45,7 @@ Future<void> showMapLauncherSheet(
               onTap: () => _openMapAndClose(
                 context,
                 appUri: Uri.parse(
-                  'nmap://search?query=${Uri.encodeComponent(query)}&appname=mart_app',
+                  'nmap://search?query=${Uri.encodeComponent(query)}&appname=wonju_mart_app',
                 ),
                 fallbackUri: Uri.parse(
                   'https://map.naver.com/p/search/${Uri.encodeComponent(query)}',

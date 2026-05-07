@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>123049771054-d53t1slhmd2pgk9s7t9inc5uiobnu655.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.123049771054-d53t1slhmd2pgk9s7t9inc5uiobnu655</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>123049771054-io085vick4k8e02vjn7ch4lsb8ifb95u.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyCv3B3SIqPyA2kdt_2fmf6tzuOBW3Divm0</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.martApp</string>
+	<string>com.wonjumart.app</string>
 	<key>PROJECT_ID</key>
 	<string>wonju-mart-app-1018</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:123049771054:ios:7e73c7768306af7fe8dfbf</string>
+	<string>1:123049771054:ios:40fa88cf54c7a8fce8dfbf</string>
 </dict>
 </plist>

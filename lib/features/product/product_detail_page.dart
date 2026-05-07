@@ -6,6 +6,7 @@ import '../marts/mart_detail_page.dart';
 import '../memo/memo_page.dart';
 import '../my/my_page.dart';
 import '../shared/app_snack_bar.dart';
+import '../shared/catalog_image.dart';
 import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
 import '../shared/shopping_list_store.dart';
@@ -69,8 +70,8 @@ class _ProductHero extends StatelessWidget {
     return SizedBox(
       height: 270,
       width: double.infinity,
-      child: Image.network(
-        item.imageUrl,
+      child: CatalogImage(
+        source: item.imageUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) => const _ImageFallback(),
       ),
@@ -112,15 +113,17 @@ class _ProductSummary extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${item.discountRate}%',
-                style: const TextStyle(
-                  color: AppColors.accentOrange,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
+              if (item.discountRate > 0) ...[
+                Text(
+                  '${item.discountRate}%',
+                  style: const TextStyle(
+                    color: AppColors.accentOrange,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Text(
                 _won(item.price),
                 style: const TextStyle(
@@ -129,18 +132,20 @@ class _ProductSummary extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              const SizedBox(width: 8),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 3),
-                child: Text(
-                  _won(item.originalPrice),
-                  style: const TextStyle(
-                    color: Color(0xFF9CA3AF),
-                    decoration: TextDecoration.lineThrough,
-                    fontWeight: FontWeight.w700,
+              if (item.discountRate > 0) ...[
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 3),
+                  child: Text(
+                    _won(item.originalPrice),
+                    style: const TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      decoration: TextDecoration.lineThrough,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
           const SizedBox(height: 10),

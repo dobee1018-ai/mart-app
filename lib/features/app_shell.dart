@@ -25,8 +25,14 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
-  final _authService = AuthService();
-  final _userRepository = UserRepository();
+  late final AuthService? _authService =
+      widget.firebaseStatus == FirebaseBootstrapStatus.ready
+      ? AuthService()
+      : null;
+  late final UserRepository? _userRepository =
+      widget.firebaseStatus == FirebaseBootstrapStatus.ready
+      ? UserRepository()
+      : null;
   int _selectedIndex = 0;
   bool _showReport = false;
   bool _showAdmin = false;
@@ -35,7 +41,9 @@ class _AppShellState extends State<AppShell> {
   void initState() {
     super.initState();
     if (widget.firebaseStatus == FirebaseBootstrapStatus.ready) {
-      ShoppingListStore.instance.bindAuthState(_authService.authStateChanges());
+      ShoppingListStore.instance.bindAuthState(
+        _authService!.authStateChanges(),
+      );
     }
   }
 
@@ -100,11 +108,12 @@ class _AppShellState extends State<AppShell> {
             ),
             title: const Text('특가 제보'),
             actions: [
-              _AdminAction(
-                authService: _authService,
-                userRepository: _userRepository,
-                onOpenAdmin: _openAdmin,
-              ),
+              if (_authService != null && _userRepository != null)
+                _AdminAction(
+                  authService: _authService,
+                  userRepository: _userRepository,
+                  onOpenAdmin: _openAdmin,
+                ),
               IconButton(
                 tooltip: '알림',
                 onPressed: () {},
@@ -129,11 +138,12 @@ class _AppShellState extends State<AppShell> {
         appBar: AppBar(
           title: Text(titles[_selectedIndex]),
           actions: [
-            _AdminAction(
-              authService: _authService,
-              userRepository: _userRepository,
-              onOpenAdmin: _openAdmin,
-            ),
+            if (_authService != null && _userRepository != null)
+              _AdminAction(
+                authService: _authService,
+                userRepository: _userRepository,
+                onOpenAdmin: _openAdmin,
+              ),
             if (showReportAction)
               IconButton(
                 tooltip: '특가 제보',

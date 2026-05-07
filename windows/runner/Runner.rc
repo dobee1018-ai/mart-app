@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "mart_app" "\0"
+            VALUE "CompanyName", "com.wonjumart" "\0"
+            VALUE "FileDescription", "wonju_mart_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "mart_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mart_app.exe" "\0"
-            VALUE "ProductName", "mart_app" "\0"
+            VALUE "InternalName", "wonju_mart_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.wonjumart. All rights reserved." "\0"
+            VALUE "OriginalFilename", "wonju_mart_app.exe" "\0"
+            VALUE "ProductName", "wonju_mart_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

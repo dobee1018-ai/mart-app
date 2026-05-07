@@ -1,11 +1,11 @@
 {
-    "name": "mart_app",
-    "short_name": "mart_app",
+    "name": "원주마트",
+    "short_name": "원주마트",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "원주 동네마트 특가와 장보기 정보를 모아보는 앱",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

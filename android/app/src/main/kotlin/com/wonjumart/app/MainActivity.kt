@@ -1,4 +1,4 @@
-package com.example.mart_app
+package com.wonjumart.app
 
 import io.flutter.embedding.android.FlutterActivity
 

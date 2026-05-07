@@ -31,8 +31,9 @@ class Recipe {
       servings: data['servings'] as int? ?? 1,
       difficulty: data['difficulty'] as String? ?? '',
       imageUrl: data['imageUrl'] as String?,
-      relatedProductIds:
-          List<String>.from(data['relatedProductIds'] as List? ?? const []),
+      relatedProductIds: List<String>.from(
+        data['relatedProductIds'] as List? ?? const [],
+      ),
     );
   }
 

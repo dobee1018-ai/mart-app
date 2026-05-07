@@ -44,8 +44,9 @@ class Mart {
       hasParking: data['hasParking'] as bool? ?? false,
       closedDays: List<String>.from(data['closedDays'] as List? ?? const []),
       status: MartStatus.values.byName(data['status'] as String? ?? 'open'),
-      flyerImageUrls:
-          List<String>.from(data['flyerImageUrls'] as List? ?? const []),
+      flyerImageUrls: List<String>.from(
+        data['flyerImageUrls'] as List? ?? const [],
+      ),
       memo: data['memo'] as String?,
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../my/my_page.dart';
 import '../product/product_detail_page.dart';
+import '../shared/catalog_image.dart';
 import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
 
@@ -42,6 +43,10 @@ class MartDetailPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 24),
               children: [
                 _MartSummary(flyer: flyer, dealCount: deals.length),
+                if (flyer.flyerImageUrls.isNotEmpty) ...[
+                  const _SectionDivider(),
+                  _FlyerImageSection(flyer: flyer),
+                ],
                 const _SectionDivider(),
                 _DealSection(deals: deals),
                 const _SectionDivider(),
@@ -79,8 +84,8 @@ class _MartSummary extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  flyer.imageUrl,
+                child: CatalogImage(
+                  source: flyer.imageUrl,
                   width: 58,
                   height: 58,
                   fit: BoxFit.cover,
@@ -130,6 +135,95 @@ class _MartSummary extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FlyerImageSection extends StatelessWidget {
+  const _FlyerImageSection({required this.flyer});
+
+  final FlyerItem flyer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(child: _SectionTitle('전단지 전체 보기')),
+              Text(
+                '${flyer.flyerImageUrls.length}장',
+                style: const TextStyle(
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...flyer.flyerImageUrls.indexed.map((entry) {
+            final page = entry.$1 + 1;
+            final imageUrl = entry.$2;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(14),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: () => _openFlyerPreview(context, imageUrl, page),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.frame),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: 1.45,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: CatalogImage(
+                              source: imageUrl,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const _ImageFallback(),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                          child: Row(
+                            children: [
+                              Text(
+                                '전단 $page면',
+                                style: const TextStyle(
+                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const Spacer(),
+                              const Icon(
+                                Icons.zoom_out_map,
+                                color: AppColors.primaryGreen,
+                                size: 18,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -195,8 +289,8 @@ class _DealTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  deal.imageUrl,
+                child: CatalogImage(
+                  source: deal.imageUrl,
                   width: 76,
                   height: 76,
                   fit: BoxFit.cover,
@@ -224,7 +318,9 @@ class _DealTile extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '${deal.discountRate}%',
+                          deal.discountRate > 0
+                              ? '${deal.discountRate}%'
+                              : '전단가',
                           style: const TextStyle(
                             color: AppColors.accentOrange,
                             fontWeight: FontWeight.w900,
@@ -416,8 +512,8 @@ class _MartInfoSheet extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  flyer.imageUrl,
+                child: CatalogImage(
+                  source: flyer.imageUrl,
                   width: 72,
                   height: 72,
                   fit: BoxFit.cover,
@@ -712,6 +808,43 @@ void _showMartInfoSheet(BuildContext context, FlyerItem flyer) {
         },
       );
     },
+  );
+}
+
+void _openFlyerPreview(BuildContext context, String imageUrl, int page) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (context) => ColoredBox(
+        color: AppColors.frame,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  tooltip: '뒤로',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                title: Text('전단 $page면'),
+              ),
+              body: InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 4,
+                child: Center(
+                  child: CatalogImage(
+                    source: imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const _ImageFallback(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }
 

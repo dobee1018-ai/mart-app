@@ -11,8 +11,8 @@
 - Firebase CLI 설치 및 로그인
 - FlutterFire CLI 설치
 - Firebase 프로젝트 생성 및 로컬 `.firebaserc` 연결
-- Android 앱 등록: `com.example.mart_app`
-- iOS 앱 등록: `com.example.martApp`
+- Android 앱 등록: `com.wonjumart.app`
+- iOS 앱 등록: `com.wonjumart.app`
 - Web 앱 등록: `mart_app (web)`
 - Flutter 설정 파일 생성: `lib/firebase_options.dart`
 - Android 설정 파일 생성: `android/app/google-services.json`
@@ -26,6 +26,11 @@
 - Firestore 보안 규칙 배포
 - Firestore 인덱스 배포
 - Firebase Storage API 활성화
+- Firebase Storage 기본 버킷 생성
+  - Bucket: `wonju-mart-app-1018.firebasestorage.app`
+  - Location: `ASIA-NORTHEAST3`
+  - Storage class: `REGIONAL`
+- Firebase Storage 보안 규칙 배포
 - 마이페이지 Google 로그인/로그아웃 버튼 연결
 - 로그인 성공 시 `users/{uid}` 사용자 문서 저장
 - 장보기 메모/마트별 장바구니를 `shopping_memos` 컬렉션에 사용자별 동기화하도록 1차 구현
@@ -44,14 +49,15 @@
    - Google 로그인: 콘솔에서 사용 설정 완료 여부 확인 필요
    - Apple 로그인
    - Kakao/Naver는 Firebase 기본 제공자가 아니므로 커스텀 인증 또는 별도 SDK 연동 필요
-2. Storage 생성
-   - Storage API는 활성화됨
-   - 현재 콘솔에서 프로젝트 요금제 업그레이드가 필요하다고 표시되어 보류
-   - 사진 제보/영수증 업로드 기능을 구현할 때 Blaze 업그레이드 재검토
+2. Firebase 사용량 제한/예산 알림 설정
+   - Blaze 요금제에서 과금 사고 방지를 위해 예산 알림 설정 필요
+   - Storage 다운로드/업로드 사용량 모니터링 필요
 3. Android Google 로그인용 SHA-1 등록
    - 현재 로컬 Java Runtime이 없어 `keytool` 실행 불가
    - Java 설치 후 디버그/릴리즈 SHA-1을 Firebase Android 앱 설정에 추가 필요
-4. 실제 배포 전 Android/iOS 패키지명을 출시용 이름으로 변경
+4. Firebase 이전 앱 정리
+   - 기존 테스트 앱 `com.example.mart_app`, `com.example.martApp`은 새 앱 설정 안정화 후 콘솔에서 삭제 검토
+   - Android `google-services.json`에는 이전/새 Android 앱 정보가 함께 포함될 수 있으며, 빌드 시 `com.wonjumart.app` 클라이언트가 선택됨
 
 ## 참고
 

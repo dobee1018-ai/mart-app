@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../theme/app_colors.dart';
+import '../shared/catalog_image.dart';
 import '../shared/external_actions.dart';
 import '../shared/mock_catalog.dart';
 import 'mart_detail_page.dart';
@@ -496,8 +497,8 @@ class _MartCard extends StatelessWidget {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              item.imageUrl,
+                            child: CatalogImage(
+                              source: item.imageUrl,
                               width: 82,
                               height: 82,
                               fit: BoxFit.cover,
