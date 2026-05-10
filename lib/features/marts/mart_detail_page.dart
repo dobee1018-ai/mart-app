@@ -229,13 +229,33 @@ class _FlyerImageSection extends StatelessWidget {
   }
 }
 
-class _DealSection extends StatelessWidget {
+class _DealSection extends StatefulWidget {
   const _DealSection({required this.deals});
 
   final List<DealItem> deals;
 
   @override
+  State<_DealSection> createState() => _DealSectionState();
+}
+
+class _DealSectionState extends State<_DealSection> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  String _selectedCategory = _allCategoryKey;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final categories = _dealCategories(widget.deals);
+    final visibleDeals = widget.deals.where(_matchesFilter).toList();
+    final hasFilter =
+        _query.trim().isNotEmpty || _selectedCategory != _allCategoryKey;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
       child: Column(
@@ -245,7 +265,7 @@ class _DealSection extends StatelessWidget {
             children: [
               const Expanded(child: _SectionTitle('진행중인 특가 상품')),
               Text(
-                '${deals.length}개',
+                '${visibleDeals.length}/${widget.deals.length}개',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w900,
@@ -254,15 +274,212 @@ class _DealSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          if (deals.isEmpty)
+          _DealSearchField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _query = value),
+            onClear: () {
+              _searchController.clear();
+              setState(() => _query = '');
+            },
+          ),
+          const SizedBox(height: 10),
+          _DealCategoryChips(
+            categories: categories,
+            selectedCategory: _selectedCategory,
+            deals: widget.deals,
+            onSelected: (category) {
+              setState(() => _selectedCategory = category);
+            },
+          ),
+          const SizedBox(height: 12),
+          if (widget.deals.isEmpty)
             const _EmptyDealCard()
+          else if (visibleDeals.isEmpty)
+            _EmptyDealCard(
+              text: hasFilter ? '조건에 맞는 특가 상품이 없습니다.' : '아직 진행중인 특가 상품이 없습니다.',
+              icon: Icons.search_off,
+            )
           else
-            ...deals.map((deal) => _DealTile(deal: deal)),
+            ...visibleDeals.map((deal) => _DealTile(deal: deal)),
         ],
       ),
     );
   }
+
+  bool _matchesFilter(DealItem deal) {
+    final matchesCategory =
+        _selectedCategory == _allCategoryKey ||
+        deal.category == _selectedCategory;
+    if (!matchesCategory) {
+      return false;
+    }
+
+    final normalizedQuery = _normalize(_query);
+    if (normalizedQuery.isEmpty) {
+      return true;
+    }
+
+    final comparisonText = deal.comparisons
+        .map((comparison) => '${comparison.unit} ${comparison.period}')
+        .join(' ');
+    final searchable = _normalize(
+      '${deal.title} ${deal.badge} ${deal.description} ${deal.price} $comparisonText',
+    );
+    return searchable.contains(normalizedQuery);
+  }
 }
+
+class _DealSearchField extends StatelessWidget {
+  const _DealSearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, value, child) {
+        return TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: '상품명 검색',
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: value.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: '검색어 지우기',
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close),
+                  ),
+            filled: true,
+            fillColor: AppColors.surface,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 13,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.frame),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.frame),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 1.4,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DealCategoryChips extends StatelessWidget {
+  const _DealCategoryChips({
+    required this.categories,
+    required this.selectedCategory,
+    required this.deals,
+    required this.onSelected,
+  });
+
+  final List<String> categories;
+  final String selectedCategory;
+  final List<DealItem> deals;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: categories.map((category) {
+          final isSelected = category == selectedCategory;
+          final count = category == _allCategoryKey
+              ? deals.length
+              : deals.where((deal) => deal.category == category).length;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text('${_categoryLabel(category)} $count'),
+              selected: isSelected,
+              onSelected: (_) => onSelected(category),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textDark,
+                fontWeight: FontWeight.w900,
+              ),
+              selectedColor: AppColors.primaryGreen,
+              backgroundColor: AppColors.surface,
+              side: BorderSide(
+                color: isSelected ? AppColors.primaryGreen : AppColors.frame,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+List<String> _dealCategories(List<DealItem> deals) {
+  final found = deals.map((deal) => deal.category).toSet();
+  final ordered = [
+    _allCategoryKey,
+    ..._categoryOrder.where(found.contains),
+    ...found.where((category) => !_categoryOrder.contains(category)).toList()
+      ..sort(),
+  ];
+  return ordered;
+}
+
+String _categoryLabel(String category) {
+  return switch (category) {
+    _allCategoryKey => '전체',
+    'meat' => '정육',
+    'veg' => '과일·채소',
+    'seafood' => '수산',
+    'dairy' => '유제품',
+    'rice' => '쌀·잡곡',
+    'processed' => '가공식품',
+    'seasoning' => '양념',
+    'living' => '생활',
+    _ => '기타',
+  };
+}
+
+String _normalize(String value) {
+  return value.toLowerCase().replaceAll(RegExp(r'\s+'), '').replaceAll(',', '');
+}
+
+const _allCategoryKey = 'all';
+const _categoryOrder = [
+  'meat',
+  'veg',
+  'seafood',
+  'dairy',
+  'rice',
+  'processed',
+  'seasoning',
+  'living',
+];
 
 class _DealTile extends StatelessWidget {
   const _DealTile({required this.deal});
@@ -271,6 +488,8 @@ class _DealTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final comparison = deal.comparisons.firstOrNull;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -311,7 +530,7 @@ class _DealTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      deal.badge,
+                      '${_categoryLabel(deal.category)} · ${deal.badge}',
                       style: const TextStyle(color: AppColors.textGray),
                     ),
                     const SizedBox(height: 8),
@@ -337,6 +556,19 @@ class _DealTile extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (comparison != null) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        '${comparison.unit} · ${comparison.period}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -624,19 +856,25 @@ class _MartInfoSheet extends StatelessWidget {
 }
 
 class _EmptyDealCard extends StatelessWidget {
-  const _EmptyDealCard();
+  const _EmptyDealCard({
+    this.text = '아직 진행중인 특가 상품이 없습니다.',
+    this.icon = Icons.local_offer_outlined,
+  });
+
+  final String text;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: const Padding(
-        padding: EdgeInsets.all(18),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
         child: Row(
           children: [
-            CircleAvatar(child: Icon(Icons.local_offer_outlined)),
-            SizedBox(width: 12),
-            Expanded(child: Text('아직 진행중인 특가 상품이 없습니다.')),
+            CircleAvatar(child: Icon(icon)),
+            const SizedBox(width: 12),
+            Expanded(child: Text(text)),
           ],
         ),
       ),
